@@ -1,8 +1,8 @@
 package no.fintlabs.aivenerator.service;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aivenerator.model.CreateACLEntryRequest;
-import no.fintlabs.aivenerator.model.CreateACLEntryResponse;
+import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
+import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
 import no.fintlabs.aivenerator.model.CreateUserRequest;
 import no.fintlabs.aivenerator.model.CreateUserResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,15 +49,15 @@ public class AivenService {
         restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class);
     }
 
-    public CreateACLEntryResponse createACLEntryForTopic(String project, String service_name, String topic, String username, String permission) {
+    public CreateAclEntryResponse createACLEntryForTopic(String project, String service_name, String topic, String username, String permission) {
         log.debug("Creating ACL entry for topic {} for user {} with permission {}", topic, username, permission);
         String uri = String.format("%s/project/%s/service/%s/aclinsbs-no-kastkaest", baseUrl, project, service_name);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
-        CreateACLEntryRequest request = new CreateACLEntryRequest();
-        CreateACLEntryResponse response = new CreateACLEntryResponse();
+        CreateAclEntryRequest request = new CreateAclEntryRequest();
+        CreateAclEntryResponse response = new CreateAclEntryResponse();
 
         String[] legalPermissions = {"admin", "read", "write", "readwrite"};
         if (Arrays.asList(legalPermissions).contains(permission.toLowerCase())) {
@@ -70,9 +70,9 @@ public class AivenService {
         request.setUsername(username);
         request.setTopic(topic);
 
-        HttpEntity<CreateACLEntryRequest> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CreateAclEntryRequest> entity = new HttpEntity<>(request, headers);
         // TODO: Need to check if topic exists, Aiven API returns a 404
-        response = restTemplate.postForObject(uri, entity, CreateACLEntryResponse.class);
+        response = restTemplate.postForObject(uri, entity, CreateAclEntryResponse.class);
         return response;
     }
     // TODO: Method to delete ACL

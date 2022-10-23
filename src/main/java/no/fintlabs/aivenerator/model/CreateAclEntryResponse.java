@@ -3,7 +3,7 @@ package no.fintlabs.aivenerator.model;
 import lombok.Data;
 
 @Data
-public class CreateACLEntryResponse {
+public class CreateAclEntryResponse {
     private ACL acl;
     private String message;
     private boolean success;
