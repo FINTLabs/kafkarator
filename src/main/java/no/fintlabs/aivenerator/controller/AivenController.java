@@ -3,6 +3,8 @@ package no.fintlabs.aivenerator.controller;
 import no.fintlabs.aivenerator.model.CreateUserRequest;
 import no.fintlabs.aivenerator.model.CreateUserResponse;
 import no.fintlabs.aivenerator.service.AivenService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/")
@@ -16,9 +18,8 @@ public class AivenController {
     }
 
     @PostMapping("/project/{project}/service/{service_name}/user")
-    public String createUserForService(@PathVariable String project, @PathVariable String service_name, @RequestBody CreateUserRequest request) {
+    public ResponseEntity<Void> createUserForService(@PathVariable String project, @PathVariable String service_name, @RequestBody CreateUserRequest request) {
         CreateUserResponse response = aivenService.createUserForService(project, service_name, request.getUsername());
-
-        return response.getUser().getUsername() + " created for service " + service_name;
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
