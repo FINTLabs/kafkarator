@@ -22,4 +22,12 @@ public class AivenController {
         CreateUserResponse response = aivenService.createUserForService(project, service_name, request.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @DeleteMapping("/project/{project}/service/{service_name}/user/{username}")
+    public ResponseEntity<Void> deleteUserForService(@PathVariable String project, @PathVariable String service_name, @PathVariable String username) {
+
+        aivenService.deleteUserForService(project, service_name, username);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 }
