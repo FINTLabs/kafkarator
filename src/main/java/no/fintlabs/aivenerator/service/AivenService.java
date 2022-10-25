@@ -32,12 +32,12 @@ public class AivenService {
         headers.set("Authorization", "Bearer " + token);
     }
 
-    public CreateUserResponse createUserForService(String project, String service_name, String username) {
-        log.debug("Creating user {} for service {}", username, service_name);
+    public CreateUserResponse createUserForService(String project, String serviceName, String username) {
+        log.debug("Creating user {} for service {}", username, serviceName);
         String url = baseUrl + "/project/{project_name}/service/{service_name}/user";
         Map<String, String> params = new HashMap<>();
         params.put("project_name", project);
-        params.put("service_name", service_name);
+        params.put("service_name", serviceName);
 
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername(username);
@@ -47,24 +47,24 @@ public class AivenService {
         return response;
     }
 
-    public void deleteUserForService(String project, String service_name, String username) {
-        log.debug("Deleting user {} from service {}", username, service_name);
+    public void deleteUserForService(String project, String serviceName, String username) {
+        log.debug("Deleting user {} from service {}", username, serviceName);
         String url = baseUrl + "/project/{project_name}/service/{service_name}/user/{username}";
         HashMap<String, String> params = new HashMap<>();
         params.put("project_name", project);
-        params.put("service_name", service_name);
+        params.put("service_name", serviceName);
         params.put("username", username);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
     }
 
-    public CreateAclEntryResponse createAclEntryForTopic(String project, String service_name, String topic, String username, String permission) {
+    public CreateAclEntryResponse createAclEntryForTopic(String project, String serviceName, String topic, String username, String permission) {
         log.debug("Creating ACL entry for topic {} for user {} with permission {}", topic, username, permission);
         String url = baseUrl + "/project/{project_name}/service/{service_name}/acl";
         Map<String, String> params = new HashMap<>();
         params.put("project_name", project);
-        params.put("service_name", service_name);
+        params.put("service_name", serviceName);
 
         CreateAclEntryRequest request = new CreateAclEntryRequest();
         CreateAclEntryResponse response = new CreateAclEntryResponse();
