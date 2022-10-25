@@ -1,5 +1,7 @@
 package no.fintlabs.aivenerator.controller;
 
+import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
+import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
 import no.fintlabs.aivenerator.model.CreateUserRequest;
 import no.fintlabs.aivenerator.model.CreateUserResponse;
 import no.fintlabs.aivenerator.service.AivenService;
@@ -29,5 +31,15 @@ public class AivenController {
         aivenService.deleteUserForService(project, service_name, username);
 
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/project/{project}/service/{service_name}/acl")
+    public ResponseEntity<String> createAclEntryForService(@PathVariable String project, @PathVariable String service_name, @RequestBody CreateAclEntryRequest request) {
+        CreateAclEntryResponse response = aivenService.createAclEntryForTopic(project, service_name, request.getTopic(), request.getUsername(), request.getPermission());
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
+        }
     }
 }
