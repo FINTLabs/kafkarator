@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -25,7 +27,10 @@ public class AivenService {
 
     public CreateUserResponse createUserForService(String project, String service_name, String username) {
         log.debug("Creating user {} for service {}", username, service_name);
-        String uri = String.format("%s/project/%s/service/%s/user", baseUrl, project, service_name);
+        String url = baseUrl + "/project/{project_name}/service/{service_name}/user";
+        Map<String, String> params = new HashMap<>();
+        params.put("project_name", project);
+        params.put("service_name", service_name);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -34,24 +39,32 @@ public class AivenService {
         request.setUsername(username);
 
         HttpEntity<CreateUserRequest> entity = new HttpEntity<>(request, headers);
-        CreateUserResponse response = restTemplate.postForObject(uri, entity, CreateUserResponse.class);
+        CreateUserResponse response = restTemplate.postForObject(url, entity, CreateUserResponse.class, params);
         return response;
     }
 
     public void deleteUserForService(String project, String service_name, String username) {
         log.debug("Deleting user {} from service {}", username, service_name);
-        String uri = String.format("%s/project/%s/service/%s/user/%s", baseUrl, project, service_name, username);
+        String url = baseUrl + "/project/{project_name}/service/{service_name}/user/{username}";
+        HashMap<String, String> params = new HashMap<>();
+        params.put("project_name", project);
+        params.put("service_name", service_name);
+        params.put("username", username);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
-        restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class);
+        restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
     }
 
-    public CreateAclEntryResponse createACLEntryForTopic(String project, String service_name, String topic, String username, String permission) {
+    public CreateAclEntryResponse createAclEntryForTopic(String project, String service_name, String topic, String username, String permission) {
         log.debug("Creating ACL entry for topic {} for user {} with permission {}", topic, username, permission);
-        String uri = String.format("%s/project/%s/service/%s/acl", baseUrl, project, service_name);
+        String url = baseUrl + "/project/{project_name}/service/{service_name}/acl";
+        Map<String, String> params = new HashMap<>();
+        params.put("project_name", project);
+        params.put("service_name", service_name);
+
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -63,15 +76,20 @@ public class AivenService {
         if (Arrays.asList(legalPermissions).contains(permission.toLowerCase())) {
             request.setPermission(permission);
         } else {
-            response.setSuccess(false);
             response.setMessage("Illegal permission, must be one of: " + Arrays.toString(legalPermissions));
+            response.setSuccess(false);
             return response;
         }
         request.setUsername(username);
         request.setTopic(topic);
 
         HttpEntity<CreateAclEntryRequest> entity = new HttpEntity<>(request, headers);
-        response = restTemplate.postForObject(uri, entity, CreateAclEntryResponse.class);
+        response = restTemplate.postForObject(url, entity, CreateAclEntryResponse.class, params);
+
+        assert response != null;
+        if (response.getMessage().equalsIgnoreCase("added")) {
+            response.setSuccess(true);
+        }
         return response;
     }
     // TODO: Method to delete ACL

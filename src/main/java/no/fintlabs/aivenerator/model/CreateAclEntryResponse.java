@@ -6,10 +6,11 @@ import java.io.Serializable;
 
 @Data
 public class CreateAclEntryResponse implements Serializable {
-    private ACL acl;
+    private ACL[] acl;
     private String message;
     private boolean success;
 
+    @Data
     public static class ACL {
         private String id;
         private String permission;
