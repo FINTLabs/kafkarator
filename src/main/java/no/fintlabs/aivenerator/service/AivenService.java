@@ -22,8 +22,15 @@ public class AivenService {
 
     @Value("${aiven.base_url}")
     private String baseUrl;
-    @Value("${aiven.token}")
-    private String token;
+
+    private final RestTemplate restTemplate;
+    private final HttpHeaders headers;
+
+    public AivenService(@Value("${aiven.token}") String token) {
+        this.restTemplate = new RestTemplate();
+        headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+    }
 
     public CreateUserResponse createUserForService(String project, String service_name, String username) {
         log.debug("Creating user {} for service {}", username, service_name);
@@ -31,9 +38,6 @@ public class AivenService {
         Map<String, String> params = new HashMap<>();
         params.put("project_name", project);
         params.put("service_name", service_name);
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
 
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername(username);
@@ -50,9 +54,6 @@ public class AivenService {
         params.put("project_name", project);
         params.put("service_name", service_name);
         params.put("username", username);
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
@@ -64,10 +65,6 @@ public class AivenService {
         Map<String, String> params = new HashMap<>();
         params.put("project_name", project);
         params.put("service_name", service_name);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
 
         CreateAclEntryRequest request = new CreateAclEntryRequest();
         CreateAclEntryResponse response = new CreateAclEntryResponse();
