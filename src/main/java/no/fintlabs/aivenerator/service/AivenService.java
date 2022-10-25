@@ -51,7 +51,7 @@ public class AivenService {
 
     public CreateAclEntryResponse createACLEntryForTopic(String project, String service_name, String topic, String username, String permission) {
         log.debug("Creating ACL entry for topic {} for user {} with permission {}", topic, username, permission);
-        String uri = String.format("%s/project/%s/service/%s/aclinsbs-no-kastkaest", baseUrl, project, service_name);
+        String uri = String.format("%s/project/%s/service/%s/acl", baseUrl, project, service_name);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -71,7 +71,6 @@ public class AivenService {
         request.setTopic(topic);
 
         HttpEntity<CreateAclEntryRequest> entity = new HttpEntity<>(request, headers);
-        // TODO: Need to check if topic exists, Aiven API returns a 404
         response = restTemplate.postForObject(uri, entity, CreateAclEntryResponse.class);
         return response;
     }
