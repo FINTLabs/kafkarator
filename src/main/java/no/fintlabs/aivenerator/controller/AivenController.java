@@ -37,9 +37,15 @@ public class AivenController {
     public ResponseEntity<String> createAclEntryForService(@PathVariable String project, @PathVariable String service_name, @RequestBody CreateAclEntryRequest request) {
         CreateAclEntryResponse response = aivenService.createAclEntryForTopic(project, service_name, request.getTopic(), request.getUsername(), request.getPermission());
         if (response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            return ResponseEntity.status(HttpStatus.CREATED).body(response.getAcl()[response.getAcl().length - 1].getId());
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
         }
+    }
+
+    @DeleteMapping("/project/{project}/service/{service_name}/acl/{acl_id}")
+    public ResponseEntity<Void> deleteAclEntryForService(@PathVariable String project, @PathVariable String service_name, @PathVariable String acl_id) {
+        aivenService.deleteAclEntryForService(project, service_name, acl_id);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

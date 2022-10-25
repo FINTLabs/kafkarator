@@ -89,6 +89,16 @@ public class AivenService {
         }
         return response;
     }
-    // TODO: Method to delete ACL
 
+    public void deleteAclEntryForService(String project, String serviceName, String aclId) {
+        log.debug("Deleting ACL entry for service {}", serviceName);
+        String url = baseUrl + "/project/{project_name}/service/{service_name}/acl/{acl_id}";
+        HashMap<String, String> params = new HashMap<>();
+        params.put("project_name", project);
+        params.put("service_name", serviceName);
+        params.put("acl_id", aclId);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
+    }
 }
