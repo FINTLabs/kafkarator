@@ -1,0 +1,8 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: AivenUser
+metadata:
+  name: vetle-sample-user
+spec:
+  project: fintlabs-no
+  service: kafka-test
+
