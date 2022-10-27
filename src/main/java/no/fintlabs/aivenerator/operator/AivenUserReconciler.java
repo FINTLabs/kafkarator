@@ -35,7 +35,6 @@ public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourc
     public UpdateControl<AivenUserCrd> reconcile(AivenUserCrd resource, Context<AivenUserCrd> context) throws Exception {
         log.debug("Reconciling {}", resource.getMetadata().getName());
 
-        Secret secret = context.getSecondaryResource(Secret.class).orElse(null);
         if (context.getSecondaryResource(Secret.class).isPresent()) {
             log.debug("Secret exists for resource {}", resource.getMetadata().getName());
             return UpdateControl.noUpdate();
@@ -59,7 +58,14 @@ public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourc
 
     @Override
     public DeleteControl cleanup(AivenUserCrd resource, Context<AivenUserCrd> context) {
-        return null;
+        log.debug("Cleaning up {}", resource.getMetadata().getName());
+        String projectName = resource.getSpec().getProject();
+        String serviceName = resource.getSpec().getService();
+        String username = secretService.getSecretIfExists(context, resource, resource.getMetadata().getName() + ".aiven.username");
+        aivenService.deleteUserForService(projectName, serviceName, username);
+        secretService.deleteSecretIfExists(context);
+        log.info("Cleanup done for {}", resource.getMetadata().getName());
+        return DeleteControl.defaultDelete();
     }
 
     @Override
