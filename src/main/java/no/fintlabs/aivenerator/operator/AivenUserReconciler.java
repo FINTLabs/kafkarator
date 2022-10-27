@@ -34,6 +34,7 @@ public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourc
     @Override
     public UpdateControl<AivenUserCrd> reconcile(AivenUserCrd resource, Context<AivenUserCrd> context) throws Exception {
         log.debug("Reconciling {}", resource.getMetadata().getName());
+        CrdValidator.validate(resource);
 
         if (context.getSecondaryResource(Secret.class).isPresent()) {
             log.debug("Secret exists for resource {}", resource.getMetadata().getName());
