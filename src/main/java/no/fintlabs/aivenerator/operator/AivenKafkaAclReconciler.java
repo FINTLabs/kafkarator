@@ -7,6 +7,7 @@ import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import io.javaoperatorsdk.operator.processing.event.source.informer.Mappers;
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
 import no.fintlabs.aivenerator.model.CreateUserResponse;
 import no.fintlabs.aivenerator.service.AivenService;
 import no.fintlabs.aivenerator.service.SecretService;
@@ -34,7 +35,7 @@ public class AivenKafkaAclReconciler implements Reconciler<AivenKafkaAclCrd>, Ev
     @Override
     public UpdateControl<AivenKafkaAclCrd> reconcile(AivenKafkaAclCrd resource, Context<AivenKafkaAclCrd> context) throws Exception {
         log.debug("Reconciling {}", resource.getMetadata().getName());
-        CrdValidator.validate(resource);
+        // CrdValidator.validate(resource);
 
         if (context.getSecondaryResource(Secret.class).isPresent()) {
             log.debug("Secret exists for resource {}", resource.getMetadata().getName());
@@ -44,10 +45,16 @@ public class AivenKafkaAclReconciler implements Reconciler<AivenKafkaAclCrd>, Ev
         String username = resource.getMetadata().getName() + "_" + uniqId();
         String projectName = resource.getSpec().getProject();
         String serviceName = resource.getSpec().getService();
+        String topic = resource.getSpec().getAcl().getTopic();
+        String permission = resource.getSpec().getAcl().getPermission();
+
         CreateUserResponse response = aivenService.createUserForService(projectName, serviceName, username);
         CreateUserResponse.User user = response.getUser();
 
-        secretService.createSecretIfNeeded(context, resource, user.getUsername(), user.getPassword(), user.getAccess_key(), user.getAccess_cert());
+        CreateAclEntryResponse aclResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
+        CreateAclEntryResponse.ACL acl = aclResponse.getAcl()[aclResponse.getAcl().length - 1];
+
+        secretService.createSecretIfNeeded(context, resource, user.getUsername(), user.getPassword(), user.getAccess_key(), user.getAccess_cert(), acl.getId());
 
         return UpdateControl.updateResourceAndStatus(resource);
     }
@@ -62,8 +69,13 @@ public class AivenKafkaAclReconciler implements Reconciler<AivenKafkaAclCrd>, Ev
         log.debug("Cleaning up {}", resource.getMetadata().getName());
         String projectName = resource.getSpec().getProject();
         String serviceName = resource.getSpec().getService();
+
         String username = secretService.getSecretIfExists(context, resource, resource.getMetadata().getName() + ".aiven.username");
         aivenService.deleteUserForService(projectName, serviceName, username);
+
+        String aclId = secretService.getSecretIfExists(context, resource, resource.getMetadata().getName() + ".aiven.acl.id");
+        aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
+
         secretService.deleteSecretIfExists(context);
         log.info("Cleanup done for {}", resource.getMetadata().getName());
         return DeleteControl.defaultDelete();

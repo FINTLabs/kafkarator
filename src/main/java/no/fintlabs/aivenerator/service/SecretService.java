@@ -26,7 +26,7 @@ public class SecretService {
         this.kubernetesClient = kubernetesClient;
     }
 
-    public void createSecretIfNeeded(Context<AivenKafkaAclCrd> context, AivenKafkaAclCrd resource, String username, String password, String accessKey, String accessCert) {
+    public void createSecretIfNeeded(Context<AivenKafkaAclCrd> context, AivenKafkaAclCrd resource, String username, String password, String accessKey, String accessCert, String aclId) {
         if (context.getSecondaryResource(Secret.class).isEmpty()) {
             log.debug("Secret for {} is missing. Creating secret.", resource.getMetadata().getName());
             Map<String, String> stringData = new HashMap<>();
@@ -35,6 +35,8 @@ public class SecretService {
             stringData.put(resource.getMetadata().getName() + ".aiven.password", password);
             stringData.put(resource.getMetadata().getName() + ".aiven.access.key", accessKey);
             stringData.put(resource.getMetadata().getName() + ".aiven.access.cert", accessCert);
+            stringData.put(resource.getMetadata().getName() + ".aiven.acl.id", aclId);
+
 
             Secret secret = new SecretBuilder()
                     .withNewMetadata()

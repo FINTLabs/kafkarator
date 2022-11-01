@@ -10,4 +10,11 @@ import lombok.*;
 public class AivenKafkaAclSpec {
     private String project;
     private String service;
+    private Acl acl;
+
+    @Data
+    public class Acl {
+        private String topic;
+        private String permission;
+    }
 }
