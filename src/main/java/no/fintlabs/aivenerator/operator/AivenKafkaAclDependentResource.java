@@ -24,6 +24,17 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     @Override
     public void delete(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+        // TODO: NOT TESTED
+        String projectName = primary.getSpec().getProject();
+        String serviceName = primary.getSpec().getService();
+        String username = primary.getMetadata().getName();
+
+        String aclId = aivenService.getAclId(projectName, serviceName, username);
+
+        aivenService.deleteUserForService(projectName, serviceName, username);
+        aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
+
+        // TODO: delete secret
 
     }
 
@@ -41,6 +52,8 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         CreateAclEntryResponse aclResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
         //CreateAclEntryResponse.ACL acl = aclResponse.getAcl()[aclResponse.getAcl().length - 1];
 
+        // TODO: create secret
+
         return AivenKafkaUserAndAcl.builder()
                 .acl(aclResponse)
                 .user(response)
@@ -50,7 +63,11 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     @Override
     public Set<AivenKafkaUserAndAcl> fetchResources(AivenKafkaAclCrd primaryResource) {
-        aivenService
+        // TODO: NOT TESTED, NOT FINISHED
+        String projectName = "";
+        String serviceName = "";
+        String username = "";
+        aivenService.getUserAndAcl(projectName, serviceName, username);
         return null;
     }
 }
