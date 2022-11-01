@@ -34,7 +34,14 @@ public class AivenService {
     }
 
     public AivenKafkaUserAndAcl getUserAndAcl(String project, String serviceName, String username) {
+        // TODO: NOT TESTED
+        String userUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/user/" + username;
+        CreateUserResponse userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateUserResponse.class).getBody();
 
+        String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
+        CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
+
+        return new AivenKafkaUserAndAcl(aclResponse, userResponse);
     }
 
     public CreateUserResponse createUserForService(String project, String serviceName, String username) {
@@ -105,5 +112,18 @@ public class AivenService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
+    }
+
+    public String getAclId(String projectName, String serviceName, String username) {
+        // TODO: NOT TESTED
+        String aclUrl = baseUrl + "/project/" + projectName + "/service/" + serviceName + "/acl";
+        CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
+
+        assert aclResponse != null;
+        return Arrays.stream(aclResponse.getAcl())
+                .filter(acl -> acl.getUsername().equalsIgnoreCase(username))
+                .findFirst()
+                .map(CreateAclEntryResponse.ACL::getId)
+                .orElse(null);
     }
 }
