@@ -5,6 +5,7 @@ import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
 import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
 import no.fintlabs.aivenerator.model.CreateUserRequest;
 import no.fintlabs.aivenerator.model.CreateUserResponse;
+import no.fintlabs.aivenerator.operator.AivenKafkaUserAndAcl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,10 @@ public class AivenService {
         this.restTemplate = new RestTemplate();
         headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
+    }
+
+    public AivenKafkaUserAndAcl getUserAndAcl(String project, String serviceName, String username) {
+
     }
 
     public CreateUserResponse createUserForService(String project, String serviceName, String username) {
