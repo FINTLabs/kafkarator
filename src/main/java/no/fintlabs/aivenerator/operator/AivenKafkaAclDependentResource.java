@@ -8,6 +8,7 @@ import no.fintlabs.aivenerator.model.CreateUserResponse;
 import no.fintlabs.aivenerator.service.AivenService;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Set;
 
 @Component
@@ -18,6 +19,7 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
     public AivenKafkaAclDependentResource(Class<AivenKafkaUserAndAcl> resourceType, FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, AivenService aivenService) {
         super(resourceType, workflow);
         this.aivenService = aivenService;
+        setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
 
     @Override
