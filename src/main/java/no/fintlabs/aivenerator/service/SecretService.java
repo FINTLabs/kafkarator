@@ -5,7 +5,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aivenerator.operator.AivenUserCrd;
+import no.fintlabs.aivenerator.operator.AivenKafkaAclCrd;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ public class SecretService {
         this.kubernetesClient = kubernetesClient;
     }
 
-    public void createSecretIfNeeded(Context<AivenUserCrd> context, AivenUserCrd resource, String username, String password, String accessKey, String accessCert) {
+    public void createSecretIfNeeded(Context<AivenKafkaAclCrd> context, AivenKafkaAclCrd resource, String username, String password, String accessKey, String accessCert) {
         if (context.getSecondaryResource(Secret.class).isEmpty()) {
             log.debug("Secret for {} is missing. Creating secret.", resource.getMetadata().getName());
             Map<String, String> stringData = new HashMap<>();
@@ -51,7 +51,7 @@ public class SecretService {
     }
 
 
-    public String getSecretIfExists(Context<AivenUserCrd> context, AivenUserCrd resource, String key) {
+    public String getSecretIfExists(Context<AivenKafkaAclCrd> context, AivenKafkaAclCrd resource, String key) {
         if (context.getSecondaryResource(Secret.class).isPresent()) {
             log.debug("Secret exists for resource {}", resource.getMetadata().getName());
             String encodedSecret = context.getSecondaryResource(Secret.class).get().getData().get(key);
@@ -60,7 +60,7 @@ public class SecretService {
         return null;
     }
 
-    public void deleteSecretIfExists(Context<AivenUserCrd> context) {
+    public void deleteSecretIfExists(Context<AivenKafkaAclCrd> context) {
         context
                 .getSecondaryResource(Secret.class)
                 .ifPresent(secret -> kubernetesClient

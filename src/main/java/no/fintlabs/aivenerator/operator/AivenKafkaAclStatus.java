@@ -6,6 +6,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AivenUserStatus extends ObservedGenerationAwareStatus {
+public class AivenKafkaAclStatus extends ObservedGenerationAwareStatus {
     private String errorMessage;
 }

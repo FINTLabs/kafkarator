@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AivenUserSpec {
+public class AivenKafkaAclSpec {
     private String project;
     private String service;
 }

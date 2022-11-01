@@ -17,7 +17,7 @@ public class CrdValidator {
             "app.kubernetes.io/part-of",
             "fintlabs.no/team");
 
-    public static void validate(AivenUserCrd crd) {
+    public static void validate(AivenKafkaAclCrd crd) {
         log.info("Validating CRD");
         List<String> missingLabels = new ArrayList<>(MANDATORY_LABELS);
         missingLabels.removeAll(crd.getMetadata().getLabels().keySet());

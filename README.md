@@ -5,20 +5,20 @@ Username, password and access certificate and -key will be stored in kubernetes 
 
 ## What does the operator do?
 
-When a `AivenUser` CR is **created**:
+When a `AivenKafkaAcl` CR is **created**:
 * The operator will create a service user in Aiven.
 * Username and password will be generated and stored in secrets along with access certificate and -key.
 
-When a `AivenUser` CR is **deleted**:
+When a `AivenKafkaAcl` CR is **deleted**:
 * The operator will delete the user from Aiven. 
 * The operator will delete the secrets from Kubernetes.
 
 ## How to use the operator:
 
-### AivenUser
+### AivenKafkaAcl
 ```yaml
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenUser
+kind: AivenKafkaAcl
 metadata:
   name: <name>
 spec:
@@ -30,7 +30,7 @@ spec:
 
 ```yaml
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenUser
+kind: AivenKafkaAcl
 metadata:
   name: sample-user
 spec:
@@ -50,13 +50,13 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: aivenusers.fintlabs.no
+  name: AivenKafkaAcls.fintlabs.no
 spec:
   group: fintlabs.no
   names:
-    kind: AivenUser
-    plural: aivenusers
-    singular: aivenuser
+    kind: AivenKafkaAcl
+    plural: AivenKafkaAcls
+    singular: AivenKafkaAcl
   scope: Namespaced
   versions:
     - name: v1alpha1
@@ -99,10 +99,10 @@ aiven:
   apiBaseUrl: https://api.aiven.io/v1
 ```
 * Run the application.
-* Create a `AivenUser` CR:
+* Create a `AivenKafkaAcl` CR:
 ```yaml
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenUser
+kind: AivenKafkaAcl
 metadata:
   name: <name>
 spec:

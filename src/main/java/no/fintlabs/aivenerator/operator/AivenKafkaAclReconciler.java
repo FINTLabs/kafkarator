@@ -18,21 +18,21 @@ import java.util.Map;
 @Slf4j
 @Component
 @ControllerConfiguration
-public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourceInitializer<AivenUserCrd>,
-        ErrorStatusHandler<AivenUserCrd>,
-        Cleaner<AivenUserCrd> {
+public class AivenKafkaAclReconciler implements Reconciler<AivenKafkaAclCrd>, EventSourceInitializer<AivenKafkaAclCrd>,
+        ErrorStatusHandler<AivenKafkaAclCrd>,
+        Cleaner<AivenKafkaAclCrd> {
 
     private final AivenService aivenService;
     private final SecretService secretService;
 
-    public AivenUserReconciler(AivenService aivenService, SecretService secretService) {
+    public AivenKafkaAclReconciler(AivenService aivenService, SecretService secretService) {
         this.aivenService = aivenService;
         this.secretService = secretService;
     }
 
 
     @Override
-    public UpdateControl<AivenUserCrd> reconcile(AivenUserCrd resource, Context<AivenUserCrd> context) throws Exception {
+    public UpdateControl<AivenKafkaAclCrd> reconcile(AivenKafkaAclCrd resource, Context<AivenKafkaAclCrd> context) throws Exception {
         log.debug("Reconciling {}", resource.getMetadata().getName());
         CrdValidator.validate(resource);
 
@@ -58,7 +58,7 @@ public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourc
     }
 
     @Override
-    public DeleteControl cleanup(AivenUserCrd resource, Context<AivenUserCrd> context) {
+    public DeleteControl cleanup(AivenKafkaAclCrd resource, Context<AivenKafkaAclCrd> context) {
         log.debug("Cleaning up {}", resource.getMetadata().getName());
         String projectName = resource.getSpec().getProject();
         String serviceName = resource.getSpec().getService();
@@ -70,15 +70,15 @@ public class AivenUserReconciler implements Reconciler<AivenUserCrd>, EventSourc
     }
 
     @Override
-    public ErrorStatusUpdateControl<AivenUserCrd> updateErrorStatus(AivenUserCrd resource, Context<AivenUserCrd> context, Exception e) {
-        AivenUserStatus resourceStatus = resource.getStatus();
+    public ErrorStatusUpdateControl<AivenKafkaAclCrd> updateErrorStatus(AivenKafkaAclCrd resource, Context<AivenKafkaAclCrd> context, Exception e) {
+        AivenKafkaAclStatus resourceStatus = resource.getStatus();
         resourceStatus.setErrorMessage(e.getMessage());
         resource.setStatus(resourceStatus);
         return ErrorStatusUpdateControl.updateStatus(resource);
     }
 
     @Override
-    public Map<String, EventSource> prepareEventSources(EventSourceContext<AivenUserCrd> context) {
+    public Map<String, EventSource> prepareEventSources(EventSourceContext<AivenKafkaAclCrd> context) {
         return EventSourceInitializer
                 .nameEventSources(
                         new InformerEventSource<>(

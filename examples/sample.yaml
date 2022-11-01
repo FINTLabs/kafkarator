@@ -1,5 +1,5 @@
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenUser
+kind: AivenKafkaAcl
 metadata:
   name: vetle-sample-user
 spec:

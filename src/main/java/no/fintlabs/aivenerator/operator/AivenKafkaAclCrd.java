@@ -8,11 +8,11 @@ import io.fabric8.kubernetes.model.annotation.Version;
 
 @Group("fintlabs.no")
 @Version("v1alpha1")
-@Kind("AivenUser")
-public class AivenUserCrd extends CustomResource<AivenUserSpec, AivenUserStatus> implements Namespaced {
+@Kind("AivenKafkaAcl")
+public class AivenKafkaAclCrd extends CustomResource<AivenKafkaAclSpec, AivenKafkaAclStatus> implements Namespaced {
     @Override
-    protected AivenUserStatus initStatus() {
-        return new AivenUserStatus();
+    protected AivenKafkaAclStatus initStatus() {
+        return new AivenKafkaAclStatus();
     }
 }
 
