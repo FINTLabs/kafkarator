@@ -1,10 +1,10 @@
 apiVersion: "fintlabs.no/v1alpha1"
 kind: AivenKafkaAcl
 metadata:
-  name: vetle-sample-user
+  name: sample-user
 spec:
   project: fintlabs-no
   service: kafka-test
   acl:
     permission: read
-    topic: '*vetle-test'
+    topic: '*sample-test'

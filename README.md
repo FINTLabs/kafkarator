@@ -1,16 +1,16 @@
 # Fint Aivenerator
 
 Fint Aivenerator is an operator that creates a service user and ACL in Aiven. 
-Username, password and access certificate and -key will be stored in kubernetes secrets
+Username, password, ACL id and access certificate and -key will be stored in kubernetes secrets
 
 ## What does the operator do?
 
 When a `AivenKafkaAcl` CR is **created**:
-* The operator will create a service user in Aiven.
-* Username and password will be generated and stored in secrets along with access certificate and -key.
+* The operator will create a service user and ACL in Aiven.
+* Username, password and ACL id will be generated and stored in secrets along with access certificate and -key.
 
 When a `AivenKafkaAcl` CR is **deleted**:
-* The operator will delete the user from Aiven. 
+* The operator will delete the user and ACL from Aiven. 
 * The operator will delete the secrets from Kubernetes.
 
 ## How to use the operator:
@@ -22,8 +22,11 @@ kind: AivenKafkaAcl
 metadata:
   name: <name>
 spec:
-  project: <project-name>
-  service: <service-name>
+  project: <project name>
+  service: <service name>
+  acl:
+    permission: <read | readwrite | write>
+    topic: '<topic>'
 ```
 
 ### Example of Custom Resource
@@ -34,8 +37,11 @@ kind: AivenKafkaAcl
 metadata:
   name: sample-user
 spec:
-  project: sample-project
-  service: test-service
+  project: fintlabs-no
+  service: kafka-test
+  acl:
+    permission: read
+    topic: '*sample-test'
 ```
 
 #### Prerequisites
@@ -50,13 +56,13 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: AivenKafkaAcls.fintlabs.no
+  name: aivenkafkaacls.fintlabs.no
 spec:
   group: fintlabs.no
   names:
     kind: AivenKafkaAcl
-    plural: AivenKafkaAcls
-    singular: AivenKafkaAcl
+    plural: aivenkafkaacls
+    singular: aivenkafkaacl
   scope: Namespaced
   versions:
     - name: v1alpha1
@@ -69,6 +75,13 @@ spec:
                   type: string
                 service:
                   type: string
+                acl:
+                  properties:
+                    topic:
+                      type: string
+                    permission:
+                      type: string
+                  type: object
               type: object
             status:
               properties:
@@ -106,15 +119,18 @@ kind: AivenKafkaAcl
 metadata:
   name: <name>
 spec:
-  project: <project-name>
-  service: <service-name>
+  project: <project name>
+  service: <service name>
+  acl:
+    permission: <read | readwrite | write>
+    topic: '<topic>'
 ```
 * Apply the CR to the cluster:
 ```bash
 kubectl apply -f <CR>.yml
 ```
-* The operator will create a service user in Aiven, and store username, password and access certificate and -key in kubernetes secrets. 
-* To delete the user and related kubernetes secrets, delete the CR:
+* The operator will create a service user and ACL in Aiven, and store username, password, ACL id and access certificate and -key in kubernetes secrets. 
+* To delete the user and ACL as well as related kubernetes secrets, delete the CR:
 ```bash
 kubectl delete -f <CR>.yml
 ```
