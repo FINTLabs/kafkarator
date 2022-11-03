@@ -14,7 +14,7 @@ import java.util.Set;
 @Component
 public class AivenKafkaAclDependentResource extends FlaisExternalDependentResource<AivenKafkaUserAndAcl, AivenKafkaAclCrd, AivenKafkaAclSpec> {
 
-    private AivenService aivenService;
+    private final AivenService aivenService;
 
     public AivenKafkaAclDependentResource(Class<AivenKafkaUserAndAcl> resourceType, FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, AivenService aivenService) {
         super(resourceType, workflow);
@@ -50,12 +50,13 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         //CreateUserResponse.User user = response.getUser();
 
         CreateAclEntryResponse aclResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
+        CreateAclEntryResponse.ACL acl = aclResponse.getAcl(username);
         //CreateAclEntryResponse.ACL acl = aclResponse.getAcl()[aclResponse.getAcl().length - 1];
 
         // TODO: create secret
 
         return AivenKafkaUserAndAcl.builder()
-                .acl(aclResponse)
+                .acl(acl)
                 .user(response)
                 .build();
 
@@ -63,11 +64,11 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     @Override
     public Set<AivenKafkaUserAndAcl> fetchResources(AivenKafkaAclCrd primaryResource) {
-        // TODO: NOT TESTED, NOT FINISHED
-        String projectName = "";
-        String serviceName = "";
-        String username = "";
-        aivenService.getUserAndAcl(projectName, serviceName, username);
-        return null;
+        // TODO: NOT TESTED
+        String projectName = primaryResource.getSpec().getProject();
+        String serviceName = primaryResource.getSpec().getService();
+        String username = primaryResource.getMetadata().getName();
+        AivenKafkaUserAndAcl userAndAcl = aivenService.getUserAndAcl(projectName, serviceName, username);
+        return Set.of(userAndAcl);
     }
 }

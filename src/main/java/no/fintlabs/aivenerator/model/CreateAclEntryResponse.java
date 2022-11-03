@@ -10,6 +10,15 @@ public class CreateAclEntryResponse implements Serializable {
     private String message;
     private boolean success;
 
+    public ACL getAcl(String username) {
+        for (ACL acl : acls) {
+            if (acl.getUsername().equals(username)) {
+                return acl;
+            }
+        }
+        return null;
+    }
+
     @Data
     public static class ACL {
         private String id;

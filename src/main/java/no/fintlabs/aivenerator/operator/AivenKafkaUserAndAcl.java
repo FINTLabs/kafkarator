@@ -10,6 +10,6 @@ import no.fintlabs.aivenerator.model.CreateUserResponse;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AivenKafkaUserAndAcl {
-    private CreateAclEntryResponse acl;
     private CreateUserResponse user;
+    private CreateAclEntryResponse.ACL acl;
 }

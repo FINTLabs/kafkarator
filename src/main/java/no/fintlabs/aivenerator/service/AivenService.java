@@ -41,7 +41,8 @@ public class AivenService {
         String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
 
-        return new AivenKafkaUserAndAcl(aclResponse, userResponse);
+        CreateAclEntryResponse.ACL acl = aclResponse.getAcl(username);
+        return new AivenKafkaUserAndAcl(userResponse, acl);
     }
 
     public CreateUserResponse createUserForService(String project, String serviceName, String username) {
