@@ -6,14 +6,14 @@ import java.io.Serializable;
 
 @Data
 public class CreateAclEntryResponse implements Serializable {
-    private ACL[] acls;
+    private ACL[] acl;
     private String message;
     private boolean success;
 
-    public ACL getAcl(String username) {
-        for (ACL acl : acls) {
-            if (acl.getUsername().equals(username)) {
-                return acl;
+    public ACL getAclByUsername(String username) {
+        for (ACL currentAcl : acl) {
+            if (currentAcl.getUsername().equals(username)) {
+                return currentAcl;
             }
         }
         return null;
