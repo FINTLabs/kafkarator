@@ -35,7 +35,7 @@ public class AivenService {
     public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username) {
         String userUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/user/" + username;
         String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
-        CreateUserResponse userResponse = null;
+        CreateUserResponse userResponse;
         try {
             userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateUserResponse.class).getBody();
         } catch (HttpClientErrorException.NotFound e) {
@@ -63,8 +63,7 @@ public class AivenService {
         request.setUsername(username);
 
         HttpEntity<CreateUserRequest> entity = new HttpEntity<>(request, headers);
-        CreateUserResponse response = restTemplate.postForObject(url, entity, CreateUserResponse.class, params);
-        return response;
+        return restTemplate.postForObject(url, entity, CreateUserResponse.class, params);
     }
 
     public void deleteUserForService(String project, String serviceName, String username) {
