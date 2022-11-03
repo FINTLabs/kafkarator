@@ -11,11 +11,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -33,16 +32,24 @@ public class AivenService {
         headers.set("Authorization", "Bearer " + token);
     }
 
-    public AivenKafkaUserAndAcl getUserAndAcl(String project, String serviceName, String username) {
-        // TODO: NOT TESTED
+    public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username) {
         String userUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/user/" + username;
-        CreateUserResponse userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateUserResponse.class).getBody();
-
         String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
+        CreateUserResponse userResponse = null;
+        try {
+            userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateUserResponse.class).getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            return Collections.emptySet();
+        }
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
-
-        CreateAclEntryResponse.ACL acl = aclResponse.getAcl(username);
-        return new AivenKafkaUserAndAcl(userResponse, acl);
+        CreateAclEntryResponse.ACL acl = null;
+        if (aclResponse != null && aclResponse.getAcl() != null) {
+            acl = aclResponse.getAclByUsername(username);
+        }
+        if (userResponse != null && acl != null) {
+            return Set.of(new AivenKafkaUserAndAcl(userResponse, acl));
+        }
+        return Collections.emptySet();
     }
 
     public CreateUserResponse createUserForService(String project, String serviceName, String username) {
@@ -116,12 +123,11 @@ public class AivenService {
     }
 
     public String getAclId(String projectName, String serviceName, String username) {
-        // TODO: NOT TESTED
         String aclUrl = baseUrl + "/project/" + projectName + "/service/" + serviceName + "/acl";
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
 
         assert aclResponse != null;
-        return Arrays.stream(aclResponse.getAcls())
+        return Arrays.stream(aclResponse.getAcl())
                 .filter(acl -> acl.getUsername().equalsIgnoreCase(username))
                 .findFirst()
                 .map(CreateAclEntryResponse.ACL::getId)

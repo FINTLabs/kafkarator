@@ -21,16 +21,18 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
 
-//    @Override
-//    protected AivenKafkaUserAndAcl desired(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
-//        CreateUserResponse userResponse = new CreateUserResponse();
-//        CreateAclEntryResponse.ACL acl = new CreateAclEntryResponse.ACL();
-//        return new AivenKafkaUserAndAcl(userResponse, acl);
-//    }
+    @Override
+    protected AivenKafkaUserAndAcl desired(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+        CreateUserResponse userResponse = new CreateUserResponse();
+        CreateAclEntryResponse.ACL acl = new CreateAclEntryResponse.ACL();
+        return AivenKafkaUserAndAcl.builder()
+                .user(userResponse)
+                .acl(acl)
+                .build();
+    }
 
     @Override
     public void delete(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
-        // TODO: NOT TESTED
         String projectName = primary.getSpec().getProject();
         String serviceName = primary.getSpec().getService();
         String username = primary.getMetadata().getName();
@@ -40,7 +42,6 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         aivenService.deleteUserForService(projectName, serviceName, username);
         aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
 
-        // TODO: delete secret
 
     }
 
@@ -53,13 +54,9 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         String permission = primary.getSpec().getAcl().getPermission();
 
         CreateUserResponse response = aivenService.createUserForService(projectName, serviceName, username);
-        //CreateUserResponse.User user = response.getUser();
 
         CreateAclEntryResponse aclResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
-        CreateAclEntryResponse.ACL acl = aclResponse.getAcl(username);
-        //CreateAclEntryResponse.ACL acl = aclResponse.getAcl()[aclResponse.getAcl().length - 1];
-
-        // TODO: create secret
+        CreateAclEntryResponse.ACL acl = aclResponse.getAclByUsername(username);
 
         return AivenKafkaUserAndAcl.builder()
                 .acl(acl)
@@ -68,13 +65,12 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     }
 
+
     @Override
     public Set<AivenKafkaUserAndAcl> fetchResources(AivenKafkaAclCrd primaryResource) {
-        // TODO: NOT TESTED
         String projectName = primaryResource.getSpec().getProject();
         String serviceName = primaryResource.getSpec().getService();
         String username = primaryResource.getMetadata().getName();
-        AivenKafkaUserAndAcl userAndAcl = aivenService.getUserAndAcl(projectName, serviceName, username);
-        return Set.of(userAndAcl);
+        return aivenService.getUserAndAcl(projectName, serviceName, username);
     }
 }
