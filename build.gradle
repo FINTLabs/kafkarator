@@ -27,7 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
 
-    implementation 'no.fintlabs:flais-operator-starter:0.0.1-SNAPSHOT'
+    implementation 'no.fintlabs:flais-operator-starter:0-SNAPSHOT'
     annotationProcessor 'io.javaoperatorsdk:operator-framework:4.0.3'
     implementation "io.javaoperatorsdk:operator-framework-spring-boot-starter:3.2.0"
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'

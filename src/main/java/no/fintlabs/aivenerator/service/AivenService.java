@@ -120,7 +120,7 @@ public class AivenService {
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
 
         assert aclResponse != null;
-        return Arrays.stream(aclResponse.getAcl())
+        return Arrays.stream(aclResponse.getAcls())
                 .filter(acl -> acl.getUsername().equalsIgnoreCase(username))
                 .findFirst()
                 .map(CreateAclEntryResponse.ACL::getId)

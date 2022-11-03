@@ -37,7 +37,7 @@ public class AivenController {
     public ResponseEntity<String> createAclEntryForService(@PathVariable String project, @PathVariable String service_name, @RequestBody CreateAclEntryRequest request) {
         CreateAclEntryResponse response = aivenService.createAclEntryForTopic(project, service_name, request.getTopic(), request.getUsername(), request.getPermission());
         if (response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response.getAcl()[response.getAcl().length - 1].getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response.getAcls()[response.getAcls().length - 1].getId());
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
         }
