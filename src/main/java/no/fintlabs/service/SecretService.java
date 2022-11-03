@@ -1,11 +1,11 @@
-package no.fintlabs.aivenerator.service;
+package no.fintlabs.service;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aivenerator.operator.AivenKafkaAclCrd;
+import no.fintlabs.operator.AivenKafkaAclCrd;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

@@ -1,11 +1,11 @@
-package no.fintlabs.aivenerator.service;
+package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
-import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
-import no.fintlabs.aivenerator.model.CreateUserRequest;
-import no.fintlabs.aivenerator.model.CreateUserResponse;
-import no.fintlabs.aivenerator.operator.AivenKafkaUserAndAcl;
+import no.fintlabs.model.CreateAclEntryRequest;
+import no.fintlabs.model.CreateAclEntryResponse;
+import no.fintlabs.model.CreateUserRequest;
+import no.fintlabs.model.CreateUserResponse;
+import no.fintlabs.operator.AivenKafkaUserAndAcl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

@@ -1,8 +1,8 @@
-package no.fintlabs.aivenerator.operator;
+package no.fintlabs.operator;
 
 import lombok.*;
-import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
-import no.fintlabs.aivenerator.model.CreateUserResponse;
+import no.fintlabs.model.CreateAclEntryResponse;
+import no.fintlabs.model.CreateUserResponse;
 
 @Getter
 @Setter

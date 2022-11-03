@@ -1,11 +1,10 @@
-package no.fintlabs.aivenerator.operator;
+package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.FlaisWorkflow;
-import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
-import no.fintlabs.aivenerator.model.CreateUserResponse;
-import no.fintlabs.aivenerator.service.AivenService;
+import no.fintlabs.model.CreateAclEntryResponse;
+import no.fintlabs.model.CreateUserResponse;
+import no.fintlabs.service.AivenService;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -16,11 +15,18 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     private final AivenService aivenService;
 
-    public AivenKafkaAclDependentResource(Class<AivenKafkaUserAndAcl> resourceType, FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, AivenService aivenService) {
-        super(resourceType, workflow);
+    public AivenKafkaAclDependentResource(AivenKafkaAclWorkflow workflow, AivenService aivenService) {
+        super(AivenKafkaUserAndAcl.class, workflow);
         this.aivenService = aivenService;
         setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
+
+//    @Override
+//    protected AivenKafkaUserAndAcl desired(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+//        CreateUserResponse userResponse = new CreateUserResponse();
+//        CreateAclEntryResponse.ACL acl = new CreateAclEntryResponse.ACL();
+//        return new AivenKafkaUserAndAcl(userResponse, acl);
+//    }
 
     @Override
     public void delete(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {

@@ -1,10 +1,10 @@
-package no.fintlabs.aivenerator.controller;
+package no.fintlabs.controller;
 
-import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
-import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
-import no.fintlabs.aivenerator.model.CreateUserRequest;
-import no.fintlabs.aivenerator.model.CreateUserResponse;
-import no.fintlabs.aivenerator.service.AivenService;
+import no.fintlabs.model.CreateAclEntryRequest;
+import no.fintlabs.model.CreateAclEntryResponse;
+import no.fintlabs.model.CreateUserRequest;
+import no.fintlabs.model.CreateUserResponse;
+import no.fintlabs.service.AivenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
