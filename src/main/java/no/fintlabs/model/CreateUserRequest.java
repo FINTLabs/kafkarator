@@ -1,4 +1,4 @@
-package no.fintlabs.aivenerator.model;
+package no.fintlabs.model;
 
 import lombok.Data;
 

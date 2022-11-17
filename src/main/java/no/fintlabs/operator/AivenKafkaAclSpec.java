@@ -1,19 +1,22 @@
-package no.fintlabs.aivenerator.operator;
+package no.fintlabs.operator;
 
 import lombok.*;
+import no.fintlabs.FlaisSpec;
+
+import java.util.List;
 
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AivenKafkaAclSpec {
+public class AivenKafkaAclSpec implements FlaisSpec {
     private String project;
     private String service;
-    private Acl acl;
+    private List<Acl> acls;
 
     @Data
-    public class Acl {
+    public static class Acl {
         private String topic;
         private String permission;
     }

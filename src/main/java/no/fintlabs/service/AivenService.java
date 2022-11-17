@@ -1,20 +1,17 @@
-package no.fintlabs.aivenerator.service;
+package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aivenerator.model.CreateAclEntryRequest;
-import no.fintlabs.aivenerator.model.CreateAclEntryResponse;
-import no.fintlabs.aivenerator.model.CreateUserRequest;
-import no.fintlabs.aivenerator.model.CreateUserResponse;
+import no.fintlabs.model.*;
+import no.fintlabs.operator.AivenKafkaUserAndAcl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -32,6 +29,28 @@ public class AivenService {
         headers.set("Authorization", "Bearer " + token);
     }
 
+    public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username, List<String> topics) {
+        String userUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/user/" + username;
+        String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
+        CreateUserResponse userResponse;
+        try {
+            userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateUserResponse.class).getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            return Collections.emptySet();
+        }
+        CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
+        List<Acl> acl = new ArrayList<>();
+        if (aclResponse != null && aclResponse.getAcl() != null) {
+            for (String topic : topics) {
+                acl.add(aclResponse.getAclByUsernameAndTopic(username, topic));
+            }
+        }
+        if (userResponse != null && acl.size() > 0) {
+            return Set.of(new AivenKafkaUserAndAcl(userResponse, acl));
+        }
+        return Collections.emptySet();
+    }
+
     public CreateUserResponse createUserForService(String project, String serviceName, String username) {
         log.debug("Creating user {} for service {}", username, serviceName);
         String url = baseUrl + "/project/{project_name}/service/{service_name}/user";
@@ -43,8 +62,7 @@ public class AivenService {
         request.setUsername(username);
 
         HttpEntity<CreateUserRequest> entity = new HttpEntity<>(request, headers);
-        CreateUserResponse response = restTemplate.postForObject(url, entity, CreateUserResponse.class, params);
-        return response;
+        return restTemplate.postForObject(url, entity, CreateUserResponse.class, params);
     }
 
     public void deleteUserForService(String project, String serviceName, String username) {
@@ -100,5 +118,12 @@ public class AivenService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
+    }
+
+    public String getAclId(String projectName, String serviceName, String username, String topic) {
+        String aclUrl = baseUrl + "/project/" + projectName + "/service/" + serviceName + "/acl";
+        CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
+
+        return aclResponse != null ? aclResponse.getAclByUsernameAndTopic(username, topic).getId() : null;
     }
 }

@@ -20,24 +20,30 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repo.fintlabs.no/releases"
+    }
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-4'
+
+    annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    annotationProcessor 'io.javaoperatorsdk:operator-framework:4.0.1'
-    implementation "io.javaoperatorsdk:operator-framework-spring-boot-starter:3.2.0"
-    annotationProcessor 'io.fabric8:crd-generator-apt:6.1.1'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 tasks.register('copyResourceDefinition', Copy) {
-    from "$buildDir/classes/java/main/META-INF/fabric8/pgschemaandusers.fintlabs.no-v1.yml"
+    from "$buildDir/classes/java/main/META-INF/fabric8/aivenkafkaacls.fintlabs.no-v1.yml"
     into "$projectDir/kustomize/base"
 }
 
@@ -45,6 +51,6 @@ tasks.named("build") { finalizedBy("copyResourceDefinition") }
 
 tasks.named("clean") {
     doLast {
-        project.delete("$projectDir/kustomize/base/pgschemaandusers.fintlabs.no-v1.yml")
+        project.delete("$projectDir/kustomize/base/aivenkafkaacls.fintlabs.no-v1.yml")
     }
 }
