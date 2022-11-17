@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
 import no.fintlabs.model.Acl;
+import no.fintlabs.service.AivenService;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -16,8 +17,12 @@ import java.util.Optional;
 @Slf4j
 @Component
 public class AivenKafKaAclSecretDependentResource extends FlaisKubernetesDependentResource<Secret, AivenKafkaAclCrd, AivenKafkaAclSpec> {
-    public AivenKafKaAclSecretDependentResource(FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, KubernetesClient kubernetesClient, AivenKafkaAclDependentResource aivenKafkaAclDependentResource) {
+
+    private final AivenService aivenService;
+
+    public AivenKafKaAclSecretDependentResource(FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, KubernetesClient kubernetesClient, AivenKafkaAclDependentResource aivenKafkaAclDependentResource, AivenService aivenService) {
         super(Secret.class, workflow, kubernetesClient);
+        this.aivenService = aivenService;
         dependsOn(aivenKafkaAclDependentResource);
     }
 
@@ -31,6 +36,10 @@ public class AivenKafKaAclSecretDependentResource extends FlaisKubernetesDepende
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
 
         labels.put("app.kubernetes.io/managed-by", "aivenerator");
+
+
+        String keystoreString = aivenService.createKeyStore(aivenKafkaUserAndAcl.getUser().getUser().getAccess_cert(), aivenKafkaUserAndAcl.getUser().getUser().getAccess_key()).toString();
+        String caCertString = aivenService.getCaCert(resource.getSpec().getProject());
         return new SecretBuilder().withNewMetadata().withName(resource.getMetadata().getName()).withNamespace(resource.getMetadata().getNamespace()).withLabels(labels).endMetadata().withStringData(new HashMap<>() {{
             // TODO: update keys
             put(resource.getMetadata().getName() + ".aiven.username", aivenKafkaUserAndAcl.getUser().getUser().getUsername());
