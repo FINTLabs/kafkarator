@@ -46,8 +46,10 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
             String topic = acl.getTopic();
             String aclId = aivenService.getAclId(projectName, serviceName, username, topic);
             aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
+            log.debug("Deleted acl {} for user {} and topic {}", aclId, username, topic);
         }
         aivenService.deleteUserForService(projectName, serviceName, username);
+        log.debug("Deleted user {} for service {}", username, serviceName);
     }
 
     @Override
@@ -61,11 +63,13 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
             String topic = primary.getSpec().getAcls().get(i).getTopic();
             String permission = primary.getSpec().getAcls().get(i).getPermission();
             CreateAclEntryResponse aclEntryResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
-            log.debug("ACL entry created: " + aclEntryResponse);
-            aclList.add(aclEntryResponse.getAclByUsernameAndTopic(username, topic));
+            Acl acl = aclEntryResponse.getAclByUsernameAndTopic(username, topic);
+            log.debug("Created acl {} for user {} and topic {}", acl.getId(), username, topic);
+            aclList.add(acl);
         }
 
         CreateUserResponse response = aivenService.createUserForService(projectName, serviceName, username);
+        log.debug("Created user {} for service {}", username, serviceName);
 
         return AivenKafkaUserAndAcl.builder()
                 .acls(aclList)
