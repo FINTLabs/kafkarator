@@ -21,12 +21,19 @@ apiVersion: "fintlabs.no/v1alpha1"
 kind: AivenKafkaAcl
 metadata:
   name: <name>
+  labels:
+    app.kubernetes.io/name: <name>
+    app.kubernetes.io/instance: <instance>
+    app.kubernetes.io/version: <version>
+    app.kubernetes.io/component: <component>
+    app.kubernetes.io/part-of: <part-of>
+    fintlabs.no/team: <team>
 spec:
   project: <project name>
   service: <service name>
   acl:
-    permission: <read | readwrite | write>
-    topic: '<topic>'
+    - permission: <read | readwrite | write>
+      topic: '<topic>'
 ```
 
 ### Example of Custom Resource
@@ -36,12 +43,21 @@ apiVersion: "fintlabs.no/v1alpha1"
 kind: AivenKafkaAcl
 metadata:
   name: sample-user
+  labels:
+    app.kubernetes.io/name: sample-user
+    app.kubernetes.io/instance: sample-test
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: sample
+    app.kubernetes.io/part-of: sample-test
+    fintlabs.no/team: sample-test
 spec:
   project: fintlabs-no
   service: kafka-test
-  acl:
-    permission: read
-    topic: '*sample-test'
+  acls:
+    - permission: read
+      topic: '*sample-test'
+    - permission: read
+      topic: '*sample-test2'
 ```
 
 #### Prerequisites
@@ -75,16 +91,22 @@ spec:
                   type: string
                 service:
                   type: string
-                acl:
-                  properties:
-                    topic:
-                      type: string
-                    permission:
-                      type: string
-                  type: object
+                acls:
+                  items:
+                    properties:
+                      topic:
+                        type: string
+                      permission:
+                        type: string
+                    type: object
+                  type: array
               type: object
             status:
               properties:
+                dependentResourceStatus:
+                  items:
+                    type: string
+                  type: array
                 errorMessage:
                   type: string
                 observedGeneration:
@@ -118,12 +140,19 @@ apiVersion: "fintlabs.no/v1alpha1"
 kind: AivenKafkaAcl
 metadata:
   name: <name>
+  labels:
+    app.kubernetes.io/name: <name>
+    app.kubernetes.io/instance: <instance>
+    app.kubernetes.io/version: <version>
+    app.kubernetes.io/component: <component>
+    app.kubernetes.io/part-of: <part-of>
+    fintlabs.no/team: <team>
 spec:
   project: <project name>
   service: <service name>
   acl:
-    permission: <read | readwrite | write>
-    topic: '<topic>'
+    - permission: <read | readwrite | write>
+      topic: '<topic>'
 ```
 * Apply the CR to the cluster:
 ```bash
