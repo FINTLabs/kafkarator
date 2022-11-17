@@ -1,8 +1,10 @@
 package no.fintlabs.operator;
 
 import lombok.*;
-import no.fintlabs.model.CreateAclEntryResponse;
+import no.fintlabs.model.Acl;
 import no.fintlabs.model.CreateUserResponse;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,5 +13,5 @@ import no.fintlabs.model.CreateUserResponse;
 @AllArgsConstructor
 public class AivenKafkaUserAndAcl {
     private CreateUserResponse user;
-    private CreateAclEntryResponse.ACL acl;
+    private List<Acl> acls;
 }

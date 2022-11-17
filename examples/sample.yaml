@@ -12,6 +12,8 @@ metadata:
 spec:
   project: fintlabs-no
   service: kafka-test
-  acl:
-    permission: read
-    topic: '*sample-test'
+  acls:
+    - permission: read
+      topic: '*sample-test'
+    - permission: read
+      topic: '*vetle-test'

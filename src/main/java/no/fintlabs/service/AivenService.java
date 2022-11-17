@@ -1,10 +1,7 @@
 package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.model.CreateAclEntryRequest;
-import no.fintlabs.model.CreateAclEntryResponse;
-import no.fintlabs.model.CreateUserRequest;
-import no.fintlabs.model.CreateUserResponse;
+import no.fintlabs.model.*;
 import no.fintlabs.operator.AivenKafkaUserAndAcl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -32,7 +29,7 @@ public class AivenService {
         headers.set("Authorization", "Bearer " + token);
     }
 
-    public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username) {
+    public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username, List<String> topics) {
         String userUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/user/" + username;
         String aclUrl = baseUrl + "/project/" + project + "/service/" + serviceName + "/acl";
         CreateUserResponse userResponse;
@@ -42,11 +39,13 @@ public class AivenService {
             return Collections.emptySet();
         }
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
-        CreateAclEntryResponse.ACL acl = null;
+        List<Acl> acl = new ArrayList<>();
         if (aclResponse != null && aclResponse.getAcl() != null) {
-            acl = aclResponse.getAclByUsername(username);
+            for (String topic : topics) {
+                acl.add(aclResponse.getAclByUsernameAndTopic(username, topic));
+            }
         }
-        if (userResponse != null && acl != null) {
+        if (userResponse != null && acl.size() > 0) {
             return Set.of(new AivenKafkaUserAndAcl(userResponse, acl));
         }
         return Collections.emptySet();
@@ -121,15 +120,10 @@ public class AivenService {
         restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class, params);
     }
 
-    public String getAclId(String projectName, String serviceName, String username) {
+    public String getAclId(String projectName, String serviceName, String username, String topic) {
         String aclUrl = baseUrl + "/project/" + projectName + "/service/" + serviceName + "/acl";
         CreateAclEntryResponse aclResponse = restTemplate.exchange(aclUrl, HttpMethod.GET, new HttpEntity<>(headers), CreateAclEntryResponse.class).getBody();
 
-        assert aclResponse != null;
-        return Arrays.stream(aclResponse.getAcl())
-                .filter(acl -> acl.getUsername().equalsIgnoreCase(username))
-                .findFirst()
-                .map(CreateAclEntryResponse.ACL::getId)
-                .orElse(null);
+        return aclResponse != null ? aclResponse.getAclByUsernameAndTopic(username, topic).getId() : null;
     }
 }

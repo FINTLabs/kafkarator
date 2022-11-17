@@ -7,6 +7,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
+import no.fintlabs.model.Acl;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -29,13 +30,16 @@ public class AivenKafKaAclSecretDependentResource extends FlaisKubernetesDepende
 
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
 
-        labels.put("app.kubernetes.io/managed-by", "flaiserator");
+        labels.put("app.kubernetes.io/managed-by", "aivenerator");
         return new SecretBuilder().withNewMetadata().withName(resource.getMetadata().getName()).withNamespace(resource.getMetadata().getNamespace()).withLabels(labels).endMetadata().withStringData(new HashMap<>() {{
+            // TODO: update keys
             put(resource.getMetadata().getName() + ".aiven.username", aivenKafkaUserAndAcl.getUser().getUser().getUsername());
             put(resource.getMetadata().getName() + ".aiven.password", aivenKafkaUserAndAcl.getUser().getUser().getPassword());
             put(resource.getMetadata().getName() + ".aiven.access.key", aivenKafkaUserAndAcl.getUser().getUser().getAccess_key());
             put(resource.getMetadata().getName() + ".aiven.access.cert", aivenKafkaUserAndAcl.getUser().getUser().getAccess_cert());
-            put(resource.getMetadata().getName() + ".aiven.acl.id", aivenKafkaUserAndAcl.getAcl().getId());
+            for (Acl acl : aivenKafkaUserAndAcl.getAcls()) {
+                put(resource.getMetadata().getName() + ".aiven.acl." + acl.getId(), acl.getId());
+            }
         }}).build();
     }
 }
