@@ -16,4 +16,4 @@ spec:
     - permission: read
       topic: '*sample-test'
     - permission: read
-      topic: '*vetle-test'
+      topic: '*sample-test2'
