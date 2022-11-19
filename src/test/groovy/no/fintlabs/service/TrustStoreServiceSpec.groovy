@@ -36,12 +36,10 @@ class TrustStoreServiceSpec extends Specification {
     def "There is 1 entry in the trust store"() {
         given:
         def store = new TrustStoreService()
-        def password = RandomStringUtils.randomAscii(32).toCharArray()
 
         when:
         def trustStore = store.createTrustStore(
-                ca,
-                password
+                ca
         )
 
         then:
@@ -51,12 +49,10 @@ class TrustStoreServiceSpec extends Specification {
     def "The trust store is of type JKS"() {
         given:
         def trustStore = new TrustStoreService()
-        def password = RandomStringUtils.randomAscii(32).toCharArray()
 
         when:
         def store = trustStore.createTrustStore(
-                ca,
-                password
+                ca
         )
 
         then:
@@ -66,10 +62,8 @@ class TrustStoreServiceSpec extends Specification {
     def "aiven ca should exist in trust store"() {
         given:
         def service = new TrustStoreService()
-        def password = RandomStringUtils.randomAscii(32).toCharArray()
         def store = service.createTrustStore(
-                ca,
-                password
+                ca
         )
 
         when:
@@ -86,8 +80,7 @@ class TrustStoreServiceSpec extends Specification {
 
         when:
         def store = service.storeToBase64(service.createTrustStore(
-                ca,
-                password
+                ca
         ), password)
         def base64 = isBase64(store)
 

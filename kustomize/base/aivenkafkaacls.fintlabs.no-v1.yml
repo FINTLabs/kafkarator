@@ -21,13 +21,15 @@ spec:
                 type: string
               service:
                 type: string
-              acl:
-                properties:
-                  topic:
-                    type: string
-                  permission:
-                    type: string
-                type: object
+              acls:
+                items:
+                  properties:
+                    topic:
+                      type: string
+                    permission:
+                      type: string
+                  type: object
+                type: array
             type: object
           status:
             properties:

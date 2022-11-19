@@ -4,13 +4,11 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.model.Acl;
-import no.fintlabs.model.CreateAclEntryResponse;
 import no.fintlabs.model.CreateUserResponse;
 import no.fintlabs.service.AivenService;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -28,11 +26,8 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     @Override
     protected AivenKafkaUserAndAcl desired(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
-        CreateUserResponse userResponse = new CreateUserResponse();
-        List<Acl> acls = new ArrayList<>();
+        // TODO: 19/11/2022 At the moment this is not representing the desired state
         return AivenKafkaUserAndAcl.builder()
-                .user(userResponse)
-                .acls(acls)
                 .build();
     }
 
@@ -42,12 +37,14 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         String serviceName = primary.getSpec().getService();
         String username = primary.getMetadata().getName();
 
-        for (AivenKafkaAclSpec.Acl acl : primary.getSpec().getAcls()) {
-            String topic = acl.getTopic();
-            String aclId = aivenService.getAclId(projectName, serviceName, username, topic);
-            aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
-            log.debug("Deleted acl {} for user {} and topic {}", aclId, username, topic);
-        }
+        primary.getSpec().getAcls()
+                .forEach(acl -> {
+                    String topic = acl.getTopic();
+                    String aclId = aivenService.getAclId(projectName, serviceName, username, topic);
+                    aivenService.deleteAclEntryForService(projectName, serviceName, aclId);
+                    log.debug("Deleted acl {} for user {} and topic {}", aclId, username, topic);
+                });
+
         aivenService.deleteUserForService(projectName, serviceName, username);
         log.debug("Deleted user {} for service {}", username, serviceName);
     }
@@ -57,23 +54,22 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
         String projectName = primary.getSpec().getProject();
         String serviceName = primary.getSpec().getService();
         String username = primary.getMetadata().getName();
-        List<AivenKafkaAclSpec.Acl> acls = primary.getSpec().getAcls();
-        List<Acl> aclList = new ArrayList<>();
-        for (int i = 0; i < acls.size(); i++) {
-            String topic = primary.getSpec().getAcls().get(i).getTopic();
-            String permission = primary.getSpec().getAcls().get(i).getPermission();
-            CreateAclEntryResponse aclEntryResponse = aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission);
-            Acl acl = aclEntryResponse.getAclByUsernameAndTopic(username, topic);
-            log.debug("Created acl {} for user {} and topic {}", acl.getId(), username, topic);
-            aclList.add(acl);
-        }
 
-        CreateUserResponse response = aivenService.createUserForService(projectName, serviceName, username);
+        CreateUserResponse createUserResponse = aivenService.createUserForService(projectName, serviceName, username);
         log.debug("Created user {} for service {}", username, serviceName);
 
+        List<Acl> createdAcls = primary.getSpec().getAcls().stream()
+                .map(acl -> {
+                    String topic = acl.getTopic();
+                    String permission = acl.getPermission();
+                    log.debug("Created ACL for user {} on topic {}", username, topic);
+                    return aivenService.createAclEntryForTopic(projectName, serviceName, topic, username, permission).getAclByUsernameAndTopic(username, topic);
+                }).toList();
+
+
         return AivenKafkaUserAndAcl.builder()
-                .acls(aclList)
-                .user(response)
+                .acls(createdAcls)
+                .user(createUserResponse)
                 .build();
 
     }
@@ -81,13 +77,13 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
     @Override
     public Set<AivenKafkaUserAndAcl> fetchResources(AivenKafkaAclCrd primaryResource) {
-        String projectName = primaryResource.getSpec().getProject();
-        String serviceName = primaryResource.getSpec().getService();
-        String username = primaryResource.getMetadata().getName();
-        List<String> topics = new ArrayList<>();
-        for (int i = 0; i < primaryResource.getSpec().getAcls().size(); i++) {
-            topics.add(primaryResource.getSpec().getAcls().get(i).getTopic());
-        }
-        return aivenService.getUserAndAcl(projectName, serviceName, username, topics);
+
+        return aivenService.getUserAndAcl(primaryResource.getSpec().getProject(),
+                primaryResource.getSpec().getService(),
+                primaryResource.getMetadata().getName(),
+                primaryResource.getSpec().getAcls()
+                        .stream()
+                        .map(AivenKafkaAclSpec.Acl::getTopic)
+                        .toList());
     }
 }
