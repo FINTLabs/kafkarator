@@ -5,6 +5,9 @@ import spock.lang.Specification
 
 import java.security.UnrecoverableKeyException
 
+import static no.fintlabs.service.TestUtil.isBase64
+import static no.fintlabs.service.TestUtil.isBase64
+
 class KeyStoreServiceSpec extends Specification {
 
     def cert = "-----BEGIN CERTIFICATE-----\n" +
@@ -147,5 +150,23 @@ class KeyStoreServiceSpec extends Specification {
         then:
         privateKey != null
         notThrown(UnrecoverableKeyException.class)
+    }
+
+    def "Convert keystore to base64"() {
+        given:
+        def service = new KeyStoreService()
+        def password = RandomStringUtils.randomAscii(32).toCharArray()
+
+        when:
+        def store = service.storeToBase64(service.createKeyStore(cert,
+                key,
+                ca,
+                password
+        ), password)
+        def base64 = isBase64(store)
+
+        then:
+        store
+        base64
     }
 }

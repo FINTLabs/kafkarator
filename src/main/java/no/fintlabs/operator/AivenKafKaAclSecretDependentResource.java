@@ -38,8 +38,8 @@ public class AivenKafKaAclSecretDependentResource extends FlaisKubernetesDepende
         labels.put("app.kubernetes.io/managed-by", "aivenerator");
 
 
-        String keystoreString = aivenService.createKeyStore(aivenKafkaUserAndAcl.getUser().getUser().getAccess_cert(), aivenKafkaUserAndAcl.getUser().getUser().getAccess_key()).toString();
-        String caCertString = aivenService.getCaCert(resource.getSpec().getProject());
+        //String keystoreString = aivenService.createKeyStore(aivenKafkaUserAndAcl.getUser().getUser().getAccess_cert(), aivenKafkaUserAndAcl.getUser().getUser().getAccess_key()).toString();
+        //String caCertString = aivenService.getCaCert(resource.getSpec().getProject());
         return new SecretBuilder().withNewMetadata().withName(resource.getMetadata().getName()).withNamespace(resource.getMetadata().getNamespace()).withLabels(labels).endMetadata().withStringData(new HashMap<>() {{
             // TODO: update keys
             put(resource.getMetadata().getName() + ".aiven.username", aivenKafkaUserAndAcl.getUser().getUser().getUsername());
