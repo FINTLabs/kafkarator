@@ -3,11 +3,12 @@ package no.fintlabs.model;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class CreateAclEntryResponse implements Serializable {
-    private List<Acl> acl;
+    private List<Acl> acl = new ArrayList<>();
     private String message;
     private boolean success;
 
