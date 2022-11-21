@@ -1,6 +1,6 @@
 package no.fintlabs.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import no.fintlabs.AivenProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -10,16 +10,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfiguration {
 
-    @Value("${fint.aiven.base-url}")
-    private String aivenBaseUrl;
+    private final AivenProperties aivenProperties;
 
-    @Value("${fint.aiven.token}")
-    private String token;
+    public WebClientConfiguration(AivenProperties aivenProperties) {
+        this.aivenProperties = aivenProperties;
+    }
 
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl(aivenBaseUrl)
+                .baseUrl(aivenProperties.getBaseUrl())
                 .filter(authHeader())
                 .build();
     }
@@ -28,7 +28,7 @@ public class WebClientConfiguration {
         return (request, next) -> next.exchange(
                 ClientRequest
                         .from(request)
-                        .headers((headers) -> headers.setBearerAuth(token))
+                        .headers((headers) -> headers.setBearerAuth(aivenProperties.getToken()))
                         .build()
         );
     }

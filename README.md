@@ -31,7 +31,7 @@ metadata:
 spec:
   project: <project name>
   service: <service name>
-  acl:
+  kafkaAclEntry:
     - permission: <read | readwrite | write>
       topic: '<topic>'
 ```
@@ -150,7 +150,7 @@ metadata:
 spec:
   project: <project name>
   service: <service name>
-  acl:
+  kafkaAclEntry:
     - permission: <read | readwrite | write>
       topic: '<topic>'
 ```

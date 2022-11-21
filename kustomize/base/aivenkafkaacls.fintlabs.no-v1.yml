@@ -17,10 +17,6 @@ spec:
         properties:
           spec:
             properties:
-              project:
-                type: string
-              service:
-                type: string
               acls:
                 items:
                   properties:

@@ -27,7 +27,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
@@ -36,6 +35,9 @@ dependencies {
     implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-4'
 
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
+
+    implementation 'org.apache.commons:commons-collections4:4.4'
+
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

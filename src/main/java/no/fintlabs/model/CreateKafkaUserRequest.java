@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CreateUserRequest {
+public class CreateKafkaUserRequest {
     private String username;
 }

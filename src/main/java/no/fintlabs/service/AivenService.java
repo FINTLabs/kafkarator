@@ -1,124 +1,125 @@
 package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.AivenProperties;
 import no.fintlabs.model.*;
-import no.fintlabs.operator.AivenKafkaUserAndAcl;
+import no.fintlabs.operator.KafkaUserAndAcl;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 public class AivenService {
 
     private final WebClient webClient;
+    private final AivenProperties aivenProperties;
 
-    public AivenService(WebClient webClient) {
+    public AivenService(WebClient webClient, AivenProperties aivenProperties) {
         this.webClient = webClient;
+        this.aivenProperties = aivenProperties;
     }
 
-    public Set<AivenKafkaUserAndAcl> getUserAndAcl(String project, String serviceName, String username, List<String> topics) {
+    public Optional<KafkaUserAndAcl> getUserAndAcl(String username) {
         try {
-            CreateUserResponse createUserResponse = webClient.get()
-                    .uri("/project/{project_name}/service/{service_name}/user/{username}", project, serviceName, username)
+            CreateKafkaUserResponse createKafkaUserResponse = webClient.get()
+                    .uri("/project/{project_name}/service/{service_name}/user/{username}", aivenProperties.getProject(), aivenProperties.getService(), username)
                     .retrieve()
-                    .bodyToMono(CreateUserResponse.class)
+                    .bodyToMono(CreateKafkaUserResponse.class)
                     .block();
 
-            CreateAclEntryResponse aclEntryResponse = webClient.get()
-                    .uri("/project/{project_name}/service/{service_name}/acl", project, serviceName)
+            CreateKafkaAclEntryResponse aclEntryResponse = webClient.get()
+                    .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
                     .retrieve()
-                    .bodyToMono(CreateAclEntryResponse.class)
+                    .bodyToMono(CreateKafkaAclEntryResponse.class)
                     .block();
 
-            return Set.of(new AivenKafkaUserAndAcl(createUserResponse, topics.stream()
-                    .map(topic -> Objects.requireNonNull(aclEntryResponse).getAclByUsernameAndTopic(username, topic))
-                    .collect(Collectors.toList())
-            ));
+            return Optional.ofNullable(KafkaUserAndAcl.fromUserAndAclResponse(createKafkaUserResponse, aclEntryResponse));
 
 
         } catch (WebClientResponseException e) {
             log.error("An error occurred when calling endpoint {}. Status code {}", Objects.requireNonNull(e.getRequest()).getURI(), e.getStatusCode());
-            return Collections.emptySet();
+            return Optional.empty();
         }
     }
 
-    public CreateUserResponse createUserForService(String project, String serviceName, String username) {
-        log.debug("Creating user {} for service {}", username, serviceName);
+    public KafkaUser createUserForService(String username)  {
+        log.debug("Creating user {} for service {}", username, aivenProperties.getService());
 
-        return webClient.post()
-                .uri("/project/{project_name}/service/{service_name}/user", project, serviceName)
-                .body(BodyInserters.fromValue(new CreateUserRequest(username)))
-                .retrieve()
-                .bodyToMono(CreateUserResponse.class)
-                .block();
+        CreateKafkaUserResponse createKafkaUserResponse = Optional.ofNullable(webClient.post()
+                        .uri("/project/{project_name}/service/{service_name}/user", aivenProperties.getProject(), aivenProperties.getService())
+                        .body(BodyInserters.fromValue(new CreateKafkaUserRequest(username)))
+                        .retrieve()
+                        .bodyToMono(CreateKafkaUserResponse.class)
+                        .block())
+                .orElseThrow();
+
+        log.debug("Created Aiven Kafka service user with message: {}", Objects.requireNonNull(createKafkaUserResponse).getMessage());
+
+        return createKafkaUserResponse.getUser();
     }
 
-    public void deleteUserForService(String project, String serviceName, String username) {
-        log.debug("Deleting user {} from service {}", username, serviceName);
+    public void deleteUserForService( String username) {
+        log.debug("Deleting user {} from service {}", username, aivenProperties.getService());
 
         webClient
                 .delete()
-                .uri("/project/{project_name}/service/{service_name}/user/{username}", project, serviceName, username)
+                .uri("/project/{project_name}/service/{service_name}/user/{username}", aivenProperties.getProject(), aivenProperties.getService(), username)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
     }
 
-    public CreateAclEntryResponse createAclEntryForTopic(String project, String serviceName, String topic, String username, String permission) {
-        log.debug("Creating ACL entry for topic {} for user {} with permission {}", topic, username, permission);
+    public KafkaAclEntry createAclEntryForTopic(KafkaAclEntry aclEntry) {
+        log.debug("Creating ACL entry for topic {} for user {} with permission {}", aclEntry.getTopic(), aclEntry.getUsername(), aclEntry.getPermission());
 
-        validatePermission(permission);
+        validatePermission(aclEntry.getPermission());
 
         return webClient
                 .post()
-                .uri("/project/{project_name}/service/{service_name}/acl", project, serviceName)
+                .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
                 .body(BodyInserters.fromValue(
-                        CreateAclEntryRequest
+                        CreateKafkaAclEntryRequest
                                 .builder()
-                                .topic(topic)
-                                .permission(permission)
-                                .username(username)
+                                .topic(aclEntry.getTopic())
+                                .permission(aclEntry.getPermission())
+                                .username(aclEntry.getUsername())
                                 .build()
                 ))
                 .retrieve()
-                .bodyToMono(CreateAclEntryResponse.class)
-                .block();
+                .bodyToMono(CreateKafkaAclEntryResponse.class)
+                .block().getAclByUsernameAndTopic(aclEntry.getUsername(), aclEntry.getTopic());
     }
 
-    public void deleteAclEntryForService(String project, String serviceName, String aclId) {
-        log.debug("Deleting ACL entry for service {}", serviceName);
+    public void deleteAclEntryForService( String aclId) {
+        log.debug("Deleting ACL entry for service {}", aivenProperties.getService());
 
         webClient
                 .delete()
-                .uri("/project/{project_name}/service/{service_name}/acl/{acl_id}", project, serviceName, aclId)
+                .uri("/project/{project_name}/service/{service_name}/acl/{acl_id}", aivenProperties.getProject(), aivenProperties.getService(), aclId)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
     }
 
-    public String getAclId(String projectName, String serviceName, String username, String topic) {
+    public KafkaUserAndAcl updateAclEntries(KafkaUserAndAcl actual, KafkaUserAndAcl desired) {
+        Collection<KafkaAclEntry> aclEntriesToRemove = CollectionUtils.removeAll(actual.getAclEntries(), desired.getAclEntries());
+        Collection<KafkaAclEntry> aclEntriesToAdd = CollectionUtils.removeAll(desired.getAclEntries(), actual.getAclEntries());
 
-        return Optional.ofNullable(webClient
-                        .get()
-                        .uri("/project/{project_name}/service/{service_name}/acl", projectName, serviceName)
-                        .retrieve()
-                        .bodyToMono(CreateAclEntryResponse.class)
-                        .block())
-                .map(createAclEntryResponse -> createAclEntryResponse.getAclByUsernameAndTopic(username, topic))
-                .map(Acl::getId)
-                .orElse(null);
+        aclEntriesToRemove.forEach(aclEntry -> deleteAclEntryForService(aclEntry.getId()));
+        aclEntriesToAdd.forEach(this::createAclEntryForTopic);
+        return getUserAndAcl(desired.getUser().getUsername()).orElseThrow();
     }
 
-    public String getCaCert(String projectName) {
+    public String getCaCert() {
 
         return Objects.requireNonNull(webClient
                         .get()
-                        .uri("/project/{project_name}/kms/ca", projectName)
+                        .uri("/project/{project_name}/kms/ca", aivenProperties.getProject())
                         .retrieve()
                         .bodyToMono(CaCertResponse.class)
                         .block())

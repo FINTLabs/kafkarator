@@ -10,10 +10,14 @@ metadata:
     app.kubernetes.io/part-of: sample-test
     fintlabs.no/team: sample-test
 spec:
-  project: fintlabs
-  service: kafka-alpha
   acls:
     - permission: read
       topic: '*sample-test'
     - permission: read
       topic: '*sample-test2'
+    - permission: write
+      topic: '*sample-test3'
+#    - permission: write
+#      topic: '*sample-test'
+#    - permission: read
+#      topic: '*test*'
