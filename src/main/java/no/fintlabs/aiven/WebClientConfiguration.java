@@ -1,6 +1,5 @@
-package no.fintlabs.service;
+package no.fintlabs.aiven;
 
-import no.fintlabs.AivenProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.ClientRequest;

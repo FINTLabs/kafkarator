@@ -1,4 +1,4 @@
-package no.fintlabs.service;
+package no.fintlabs.keystore;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

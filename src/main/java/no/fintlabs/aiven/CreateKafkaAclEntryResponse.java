@@ -1,4 +1,4 @@
-package no.fintlabs.model;
+package no.fintlabs.aiven;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

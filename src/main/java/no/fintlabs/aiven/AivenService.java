@@ -1,8 +1,6 @@
-package no.fintlabs.service;
+package no.fintlabs.aiven;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.AivenProperties;
-import no.fintlabs.model.*;
 import no.fintlabs.operator.KafkaUserAndAcl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
@@ -47,7 +45,7 @@ public class AivenService {
         }
     }
 
-    public KafkaUser createUserForService(String username)  {
+    public AivenServiceUser createUserForService(String username)  {
         log.debug("Creating user {} for service {}", username, aivenProperties.getService());
 
         CreateKafkaUserResponse createKafkaUserResponse = Optional.ofNullable(webClient.post()

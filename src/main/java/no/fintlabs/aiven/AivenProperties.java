@@ -1,4 +1,4 @@
-package no.fintlabs;
+package no.fintlabs.aiven;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -4,5 +4,5 @@ import no.fintlabs.FlaisWorkflow;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AivenKafkaAclWorkflow extends FlaisWorkflow<AivenKafkaAclCrd,AivenKafkaAclSpec> {
+public class KafkaUserAndAclWorkflow extends FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
 }

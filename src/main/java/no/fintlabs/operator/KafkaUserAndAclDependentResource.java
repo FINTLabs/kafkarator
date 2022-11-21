@@ -6,11 +6,11 @@ import io.javaoperatorsdk.operator.processing.dependent.DesiredEqualsMatcher;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import io.javaoperatorsdk.operator.processing.dependent.Updater;
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.AivenProperties;
+import no.fintlabs.aiven.AivenProperties;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.model.KafkaAclEntry;
-import no.fintlabs.model.KafkaUser;
-import no.fintlabs.service.AivenService;
+import no.fintlabs.aiven.KafkaAclEntry;
+import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.AivenService;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -22,13 +22,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class AivenKafkaAclDependentResource extends FlaisExternalDependentResource<KafkaUserAndAcl, AivenKafkaAclCrd, AivenKafkaAclSpec>
-        implements Updater<KafkaUserAndAcl, AivenKafkaAclCrd> {
+public class KafkaUserAndAclDependentResource extends FlaisExternalDependentResource<KafkaUserAndAcl, KafkaUserAndAclCrd, KafkaUserAndAclSpec>
+        implements Updater<KafkaUserAndAcl, KafkaUserAndAclCrd> {
 
     private final AivenService aivenService;
     private final AivenProperties aivenProperties;
 
-    public AivenKafkaAclDependentResource(AivenKafkaAclWorkflow workflow, AivenService aivenService, AivenProperties aivenProperties) {
+    public KafkaUserAndAclDependentResource(KafkaUserAndAclWorkflow workflow, AivenService aivenService, AivenProperties aivenProperties) {
         super(KafkaUserAndAcl.class, workflow);
         this.aivenService = aivenService;
         this.aivenProperties = aivenProperties;
@@ -36,10 +36,10 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
     }
 
     @Override
-    protected KafkaUserAndAcl desired(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    protected KafkaUserAndAcl desired(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
 
         return KafkaUserAndAcl.builder()
-                .user(KafkaUser.fromUsername(primary.getMetadata().getName()))
+                .user(AivenServiceUser.fromUsername(primary.getMetadata().getName()))
                 .aclEntries(
                         primary
                                 .getSpec()
@@ -53,7 +53,7 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
 
     @Override
-    public void delete(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    public void delete(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         String serviceName = aivenProperties.getService();
         String username = primary.getMetadata().getName();
 
@@ -71,10 +71,10 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
     }
 
     @Override
-    public KafkaUserAndAcl create(KafkaUserAndAcl desired, AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    public KafkaUserAndAcl create(KafkaUserAndAcl desired, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         String serviceName = aivenProperties.getService();
 
-        KafkaUser kafkaUser = aivenService.createUserForService(desired.getUser().getUsername());
+        AivenServiceUser aivenServiceUser = aivenService.createUserForService(desired.getUser().getUsername());
         log.debug("Created user {} for service {}", desired.getUser().getUsername(), serviceName);
 
         List<KafkaAclEntry> kafkaAclEntries = desired.getAclEntries()
@@ -89,14 +89,14 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
 
         return KafkaUserAndAcl.builder()
                 .aclEntries(kafkaAclEntries)
-                .user(kafkaUser)
+                .user(aivenServiceUser)
                 .build();
 
     }
 
 
     @Override
-    public Set<KafkaUserAndAcl> fetchResources(AivenKafkaAclCrd primaryResource) {
+    public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primaryResource) {
 
         return aivenService
                 .getUserAndAcl(primaryResource.getMetadata().getName())
@@ -105,24 +105,24 @@ public class AivenKafkaAclDependentResource extends FlaisExternalDependentResour
     }
 
     @Override
-    public ReconcileResult<KafkaUserAndAcl> reconcile(AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    public ReconcileResult<KafkaUserAndAcl> reconcile(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         return super.reconcile(primary, context);
     }
 
     @Override
-    protected KafkaUserAndAcl handleCreate(KafkaUserAndAcl desired, AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    protected KafkaUserAndAcl handleCreate(KafkaUserAndAcl desired, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         return super.handleCreate(desired, primary, context);
     }
 
     @Override
-    public KafkaUserAndAcl update(KafkaUserAndAcl actual, KafkaUserAndAcl desired, AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
+    public KafkaUserAndAcl update(KafkaUserAndAcl actual, KafkaUserAndAcl desired, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         log.debug("Updating Kafka acls");
         return aivenService.updateAclEntries(actual, desired);
     }
 
     @Override
-    public Matcher.Result<KafkaUserAndAcl> match(KafkaUserAndAcl actualResource, AivenKafkaAclCrd primary, Context<AivenKafkaAclCrd> context) {
-        DesiredEqualsMatcher<KafkaUserAndAcl, AivenKafkaAclCrd> matcher = new DesiredEqualsMatcher<>(this);
+    public Matcher.Result<KafkaUserAndAcl> match(KafkaUserAndAcl actualResource, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
+        DesiredEqualsMatcher<KafkaUserAndAcl, KafkaUserAndAclCrd> matcher = new DesiredEqualsMatcher<>(this);
 
         return matcher.match(actualResource, primary, context);
     }

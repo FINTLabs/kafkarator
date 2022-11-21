@@ -1,15 +1,15 @@
 package no.fintlabs.operator
 
-import no.fintlabs.model.KafkaAclEntry
-import no.fintlabs.model.KafkaUser
+import no.fintlabs.aiven.KafkaAclEntry
+import no.fintlabs.aiven.AivenServiceUser
 import spock.lang.Specification
 
-class KafkaUserAndAclSpec extends Specification {
+class AivenServiceUserAndAclModelSpec extends Specification {
 
     def "KafkaUser should be equal only by username"() {
         given:
-        def user1 = KafkaUser.fromUsername("test")
-        def user2 = KafkaUser
+        def user1 = AivenServiceUser.fromUsername("test")
+        def user2 = AivenServiceUser
                 .builder()
                 .username("test")
                 .password("topsecret")
@@ -50,7 +50,7 @@ class KafkaUserAndAclSpec extends Specification {
     def "Desired and actual KafkaUserAndAcl should be equal"() {
         given:
         def desired = KafkaUserAndAcl.builder()
-                .user(KafkaUser.fromUsername("test"))
+                .user(AivenServiceUser.fromUsername("test"))
                 .aclEntries(
                         Arrays.asList(
                                 KafkaAclEntry
@@ -71,7 +71,7 @@ class KafkaUserAndAclSpec extends Specification {
 
         def actual = KafkaUserAndAcl.builder()
                 .user(
-                        KafkaUser
+                        AivenServiceUser
                                 .builder()
                                 .username("test")
                                 .password("topsecret")

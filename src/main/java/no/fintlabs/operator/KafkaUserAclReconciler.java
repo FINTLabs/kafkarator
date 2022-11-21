@@ -1,8 +1,6 @@
 package no.fintlabs.operator;
 
-import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
-import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Deleter;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.EventSourceProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +13,8 @@ import java.util.List;
 @Slf4j
 @Component
 @ControllerConfiguration
-public class AivenKafkaAclReconciler extends FlaisReconiler<AivenKafkaAclCrd, AivenKafkaAclSpec> {
-    public AivenKafkaAclReconciler(FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, List<? extends EventSourceProvider<AivenKafkaAclCrd>> eventSourceProviders, List<? extends Deleter<AivenKafkaAclCrd>> deleters) {
+public class KafkaUserAclReconciler extends FlaisReconiler<KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
+    public KafkaUserAclReconciler(FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> workflow, List<? extends EventSourceProvider<KafkaUserAndAclCrd>> eventSourceProviders, List<? extends Deleter<KafkaUserAndAclCrd>> deleters) {
         super(workflow, eventSourceProviders, deleters);
     }
 }

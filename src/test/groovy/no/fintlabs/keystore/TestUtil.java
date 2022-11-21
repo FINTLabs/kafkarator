@@ -1,4 +1,4 @@
-package no.fintlabs.service;
+package no.fintlabs.keystore;
 
 import java.util.Base64;
 

@@ -2,7 +2,7 @@ package no.fintlabs.operator;
 
 import lombok.*;
 import no.fintlabs.FlaisSpec;
-import no.fintlabs.model.KafkaAclEntry;
+import no.fintlabs.aiven.KafkaAclEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AivenKafkaAclSpec implements FlaisSpec {
+public class KafkaUserAndAclSpec implements FlaisSpec {
     private List<Acl> acls = new ArrayList<>();
 
     @Data

@@ -7,8 +7,8 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
-import no.fintlabs.model.KafkaAclEntry;
-import no.fintlabs.service.AivenService;
+import no.fintlabs.aiven.KafkaAclEntry;
+import no.fintlabs.aiven.AivenService;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -16,15 +16,15 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-public class AivenKafKaAclSecretDependentResource extends FlaisKubernetesDependentResource<Secret, AivenKafkaAclCrd, AivenKafkaAclSpec> {
+public class KafKaUserAclSecretDependentResource extends FlaisKubernetesDependentResource<Secret, KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
 
-    public AivenKafKaAclSecretDependentResource(FlaisWorkflow<AivenKafkaAclCrd, AivenKafkaAclSpec> workflow, KubernetesClient kubernetesClient, AivenKafkaAclDependentResource aivenKafkaAclDependentResource, AivenService aivenService) {
+    public KafKaUserAclSecretDependentResource(FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> workflow, KubernetesClient kubernetesClient, KafkaUserAndAclDependentResource kafkaUserAndAclDependentResource, AivenService aivenService) {
         super(Secret.class, workflow, kubernetesClient);
-        dependsOn(aivenKafkaAclDependentResource);
+        dependsOn(kafkaUserAndAclDependentResource);
     }
 
     @Override
-    protected Secret desired(AivenKafkaAclCrd resource, Context<AivenKafkaAclCrd> context) {
+    protected Secret desired(KafkaUserAndAclCrd resource, Context<KafkaUserAndAclCrd> context) {
         log.debug("Desired secret for {}", resource.getMetadata().getName());
 
         Optional<KafkaUserAndAcl> userAndAcl = context.getSecondaryResource(KafkaUserAndAcl.class);

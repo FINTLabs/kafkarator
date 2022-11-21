@@ -1,9 +1,9 @@
-package no.fintlabs.service
+package no.fintlabs.keystore
 
 import org.apache.commons.lang3.RandomStringUtils
 import spock.lang.Specification
 
-import static no.fintlabs.service.TestUtil.isBase64
+import static no.fintlabs.keystore.TestUtil.isBase64
 
 class TrustStoreServiceSpec extends Specification {
 

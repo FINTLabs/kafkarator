@@ -1,15 +1,13 @@
-package no.fintlabs.model;
+package no.fintlabs.aiven;
 
 import lombok.*;
 
 @Builder
-@Setter
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"id"})
-public class KafkaAclEntry {
-    private String id;
+public class CreateKafkaAclEntryRequest {
     private String permission;
     private String topic;
     private String username;
