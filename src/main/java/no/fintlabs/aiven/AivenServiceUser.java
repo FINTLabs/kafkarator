@@ -1,5 +1,6 @@
 package no.fintlabs.aiven;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Builder
@@ -9,8 +10,10 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"username"})
 public class AivenServiceUser {
-    private String access_cert;
-    private String access_key;
+    @JsonProperty("access_cert")
+    private String accessCert;
+    @JsonProperty("access_key")
+    private String accessKey;
     private String password;
     private String type;
     private String username;

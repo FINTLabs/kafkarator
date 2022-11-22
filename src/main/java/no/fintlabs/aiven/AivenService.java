@@ -1,5 +1,6 @@
 package no.fintlabs.aiven;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.operator.KafkaUserAndAcl;
 import org.apache.commons.collections4.CollectionUtils;
@@ -8,6 +9,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Slf4j
@@ -17,19 +19,29 @@ public class AivenService {
     private final WebClient webClient;
     private final AivenProperties aivenProperties;
 
+    @Getter
+    private String ca;
+
     public AivenService(WebClient webClient, AivenProperties aivenProperties) {
         this.webClient = webClient;
         this.aivenProperties = aivenProperties;
     }
 
+    @PostConstruct
+    public void init() {
+        ca = getCaCert();
+    }
+
     public Optional<KafkaUserAndAcl> getUserAndAcl(String username) {
         try {
+            // TODO: 22/11/2022 Create separate models for GET
             CreateKafkaUserResponse createKafkaUserResponse = webClient.get()
                     .uri("/project/{project_name}/service/{service_name}/user/{username}", aivenProperties.getProject(), aivenProperties.getService(), username)
                     .retrieve()
                     .bodyToMono(CreateKafkaUserResponse.class)
                     .block();
 
+            // TODO: 22/11/2022 Create separate models for GET
             CreateKafkaAclEntryResponse aclEntryResponse = webClient.get()
                     .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
                     .retrieve()
@@ -40,7 +52,7 @@ public class AivenService {
 
 
         } catch (WebClientResponseException e) {
-            log.error("An error occurred when calling endpoint {}. Status code {}", Objects.requireNonNull(e.getRequest()).getURI(), e.getStatusCode());
+            log.debug("Could not find  user {}. Proceeding to create...", username);
             return Optional.empty();
         }
     }
@@ -113,7 +125,7 @@ public class AivenService {
         return getUserAndAcl(desired.getUser().getUsername()).orElseThrow();
     }
 
-    public String getCaCert() {
+    private String getCaCert() {
 
         return Objects.requireNonNull(webClient
                         .get()

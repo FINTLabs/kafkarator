@@ -21,6 +21,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven {
         url "https://repo.fintlabs.no/releases"
     }
@@ -32,7 +33,8 @@ dependencies {
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
 
 
-    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-4'
+    //implementation 'no.fintlabs:flais-operator-starter:0-SNAPSHOT'
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
 
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
 

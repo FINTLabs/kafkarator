@@ -15,5 +15,6 @@ public class AivenProperties {
     private String token;
     private String project = "fintlabs";
     private String service;
+    private String kafkaBootstrapServers;
 
 }

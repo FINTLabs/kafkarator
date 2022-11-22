@@ -1,5 +1,6 @@
 package no.fintlabs.keystore;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -15,6 +16,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class KeyStoreService extends Store {
 
@@ -40,17 +42,26 @@ public class KeyStoreService extends Store {
         return keyFactory.generatePrivate(keySpec);
     }
 
-    public KeyStore createKeyStore(String cert, String key, String ca, char[] password) throws GeneralSecurityException, IOException {
+    public KeyStore createKeyStore(String cert, String key, String ca, char[] password) {
 
-        KeyStore keyStore = createEmptyStore("PKCS12");
-        X509Certificate publicCert = loadCertificate(cert);
-        PrivateKey privateKey = loadPrivateKey(key);
-        X509Certificate caCertificate = loadCA(ca);
-
-
-        keyStore.setKeyEntry("1", privateKey, password, new Certificate[]{publicCert, caCertificate});
+        try {
+            KeyStore keyStore = createEmptyStore("PKCS12");
+            X509Certificate publicCert = loadCertificate(cert);
+            PrivateKey privateKey = loadPrivateKey(key);
+            X509Certificate caCertificate = loadCA(ca);
 
 
-        return keyStore;
+            keyStore.setKeyEntry("1", privateKey, password, new Certificate[]{publicCert, caCertificate});
+
+
+            return keyStore;
+        } catch (IOException | GeneralSecurityException e) {
+            log.error("An error occurred when creating key store: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String createKeyStoreAndGetAsBase64(String cert, String key, String ca, char[] password) {
+        return storeToBase64(createKeyStore(cert, key, ca, password), password);
     }
 }
