@@ -54,7 +54,7 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 tasks.register('copyResourceDefinition', Copy) {
-    from "$buildDir/classes/java/main/META-INF/fabric8/aivenkafkaacls.fintlabs.no-v1.yml"
+    from "$buildDir/classes/java/main/META-INF/fabric8/kafkauserandacls.fintlabs.no-v1.yml"
     into "$projectDir/kustomize/base"
 }
 
@@ -62,6 +62,6 @@ tasks.named("build") { finalizedBy("copyResourceDefinition") }
 
 tasks.named("clean") {
     doLast {
-        project.delete("$projectDir/kustomize/base/aivenkafkaacls.fintlabs.no-v1.yml")
+        project.delete("$projectDir/kustomize/base/kafkauserandacls.fintlabs.no-v1.yml")
     }
 }

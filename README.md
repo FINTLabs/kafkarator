@@ -1,24 +1,24 @@
 # Fint Aivenerator
 
-Fint Aivenerator is an operator that creates a service user and ACL in Aiven. 
+Fint Kafkarator is an operator that creates a service user and ACL in Aiven for Kafka. 
 Username, password, ACL id and access certificate and -key will be stored in kubernetes secrets
 
 ## What does the operator do?
 
-When a `AivenKafkaAcl` CR is **created**:
+When a `KafkaUserAndAcl` CR is **created**:
 * The operator will create a service user and ACL in Aiven.
 * Username, password and ACL id will be generated and stored in secrets along with access certificate and -key.
 
-When a `AivenKafkaAcl` CR is **deleted**:
+When a `KafkaUserAndAcl` CR is **deleted**:
 * The operator will delete the user and ACL from Aiven. 
 * The operator will delete the secrets from Kubernetes.
 
 ## How to use the operator:
 
-### AivenKafkaAcl
+### KafkaUserAndAcl
 ```yaml
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenKafkaAcl
+kind: KafkaUserAndAcl
 metadata:
   name: <name>
   labels:
@@ -29,7 +29,7 @@ metadata:
     app.kubernetes.io/part-of: <part-of>
     fintlabs.no/team: <team>
 spec:
-  kafkaAclEntry:
+  acls:
     - permission: <read | readwrite | write>
       topic: '<topic>'
 ```
@@ -38,7 +38,7 @@ spec:
 
 ```yaml
 apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenKafkaAcl
+kind: KafkaUserAndAcl
 metadata:
   name: sample-user
   labels:
@@ -46,7 +46,7 @@ metadata:
     app.kubernetes.io/instance: sample-test
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: sample
-    app.kubernetes.io/'part-of: sample-test
+    app.kubernetes.io/part-of: sample-test
     fintlabs.no/team: sample-test
 spec:
   acls:

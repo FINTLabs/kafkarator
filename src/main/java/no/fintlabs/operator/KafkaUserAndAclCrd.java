@@ -9,13 +9,11 @@ import no.fintlabs.FlaisStatus;
 
 @Group("fintlabs.no")
 @Version("v1alpha1")
-@Kind("AivenKafkaAcl")
-public class KafkaUserAndAclCrd extends FlaisCrd<KafkaUserAndAclSpec>/*CustomResource<AivenKafkaAclSpec, FlaisStatus>*/ implements Namespaced {
-    @Override
-    protected FlaisStatus initStatus() {
-        return new FlaisStatus();
-    }
-
-
+@Kind("KafkaUserAndAcl")
+public class KafkaUserAndAclCrd extends FlaisCrd<KafkaUserAndAclSpec> implements Namespaced {
+//    @Override
+//    protected FlaisStatus initStatus() {
+//        return new FlaisStatus();
+//    }
 }
 
