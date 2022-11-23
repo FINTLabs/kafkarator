@@ -38,14 +38,13 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
             AivenService aivenService,
             KeyStoreService keyStoreService,
             CertificateSecretDiscriminator discriminator, TrustStoreService trustStoreService) {
+
         super(Secret.class, workflow, kubernetesClient);
         this.aivenService = aivenService;
         this.keyStoreService = keyStoreService;
         this.trustStoreService = trustStoreService;
         dependsOn(kafkaSecretDependentResource, kafkaUserAndAclDependentResource);
-        //useEventSourceWithName(this.getClass().getSimpleName());
         setResourceDiscriminator(discriminator);
-
 
     }
 
@@ -56,13 +55,13 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
         KafkaUserAndAcl kafkaUserAndAcl = context.getSecondaryResource(KafkaUserAndAcl.class).orElseThrow();
         Secret kafkaSecret = context.getSecondaryResources(Secret.class)
                 .stream()
-                .filter(secret -> secret.getMetadata().getName().equals(resource.getMetadata().getName() + KafkaSecretDependentResource.NAME_SUFFIX))
+                .filter(secret -> secret.getMetadata().getName().equals(KafkaSecretDependentResource.getResourceName(resource)/*resource.getMetadata().getName() + KafkaSecretDependentResource.NAME_SUFFIX*/))
                 .findFirst()
                 .orElseThrow();
 
         Optional<Secret> thisSecret = context.getSecondaryResources(Secret.class)
                 .stream()
-                .filter(secret -> secret.getMetadata().getName().equals(resource.getMetadata().getName() + NAME_SUFFIX))
+                .filter(secret -> secret.getMetadata().getName().equals(getResourceName(resource)/*resource.getMetadata().getName() + NAME_SUFFIX)*/))
                 .findFirst();
 
         String keyStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.key-store-password"));
@@ -88,7 +87,7 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
 
         return new SecretBuilder()
                 .withNewMetadata()
-                .withName(resource.getMetadata().getName() + NAME_SUFFIX)
+                .withName(getResourceName(resource))
                 .withNamespace(resource.getMetadata().getNamespace())
                 .withLabels(labels)
                 .endMetadata()
@@ -97,6 +96,10 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
                 .addToData("client.truststore.jks", trustStore)
                 .build();
 
+    }
+
+    public static String getResourceName(KafkaUserAndAclCrd resource) {
+        return resource.getMetadata().getName() + NAME_SUFFIX;
     }
 
     @Override

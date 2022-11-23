@@ -45,7 +45,7 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
 
         Optional<Secret> thisSecret = context.getSecondaryResources(Secret.class)
                 .stream()
-                .filter(secret -> secret.getMetadata().getName().equals(resource.getMetadata().getName() + NAME_SUFFIX))
+                .filter(secret -> secret.getMetadata().getName().equals(getResourceName(resource)))
                 .findFirst();
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
 
@@ -56,7 +56,7 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
 
         return new SecretBuilder()
                 .withNewMetadata()
-                .withName(resource.getMetadata().getName() + NAME_SUFFIX)
+                .withName(getResourceName(resource))
                 .withNamespace(resource.getMetadata().getNamespace())
                 .withLabels(labels)
                 .endMetadata()
@@ -72,6 +72,10 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
                 .addToData("spring.kafka.ssl.trust-store-password", encode(trustStorePassword))
                 .addToData("spring.kafka.ssl.trust-store-type", encode("JKS"))
                 .build();
+    }
+
+    public static String getResourceName(KafkaUserAndAclCrd resource) {
+        return resource.getMetadata().getName() + NAME_SUFFIX;
     }
 
     @Override

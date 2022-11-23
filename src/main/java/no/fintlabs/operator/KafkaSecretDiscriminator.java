@@ -21,7 +21,7 @@ public class KafkaSecretDiscriminator implements ResourceDiscriminator<Secret, K
                 (InformerEventSource<Secret, KafkaUserAndAclCrd>) context
                         .eventSourceRetriever().getResourceEventSourceFor(Secret.class, KafkaSecretDependentResource.class.getSimpleName());
 
-        return ies.get(new ResourceID(primary.getMetadata().getName() + NAME_SUFFIX,
+        return ies.get(new ResourceID(KafkaSecretDependentResource.getResourceName(primary)/*primary.getMetadata().getName() + NAME_SUFFIX*/,
                 primary.getMetadata().getNamespace()));
     }
 }
