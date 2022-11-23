@@ -1,7 +1,15 @@
 spring:
   application:
-    name: aivenerator
+    name: kafkarator
 
 logging:
   level:
     no.fintlabs: debug
+
+fint:
+  aiven:
+    token:
+    base-url: https://api.aiven.io/v1
+    project: fintlabs
+    service:
+    kafka-bootstrap-servers:

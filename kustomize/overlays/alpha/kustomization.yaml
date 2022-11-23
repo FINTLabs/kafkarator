@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  -  ../../base
+patches:
+  - patch: |-
+      - op: add
+        path: "/spec/template/spec/containers/0/env/-"
+        value:  
+          name: fint.operator.environment
+          value: alpha
+    target:
+      kind: Deployment
+      name: kafkarator
+  - patch: |-
+      - op: add
+        path: "/spec/template/spec/containers/0/env/-"
+        value:
+          name: fint.aiven.service
+          value: kafka-alpha
+    target:
+      kind: Deployment
+      name: kafkarator
+  - patch: |-
+      - op: replace
+        path: "/spec/itemPath"
+        value: "vaults/aks-alpha-vault/items/kafkarator"
+    target:
+      kind: OnePasswordItem
+      name: kafkarator
