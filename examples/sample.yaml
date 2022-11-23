@@ -1,5 +1,5 @@
-apiVersion: "fintlabs.no/v1alpha1"
-kind: AivenKafkaAcl
+apiVersion: fintlabs.no/v1alpha1
+kind: KafkaUserAndAcl
 metadata:
   name: sample-user
   labels:
@@ -9,11 +9,16 @@ metadata:
     app.kubernetes.io/component: sample
     app.kubernetes.io/part-of: sample-test
     fintlabs.no/team: sample-test
+    fintlabs.no/org-id: fintlabs.no
 spec:
-  project: fintlabs-no
-  service: kafka-test
   acls:
     - permission: read
       topic: '*sample-test'
     - permission: read
       topic: '*sample-test2'
+    - permission: write
+      topic: '*sample-test3'
+#    - permission: write
+#      topic: '*sample-test'
+    - permission: read
+      topic: '*test*'

@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.4'
     id 'io.spring.dependency-management' version '1.0.14.RELEASE'
     id 'java'
+    id 'groovy'
 }
 
 group = 'no.fintlabs'
@@ -20,30 +21,40 @@ configurations {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven {
         url "https://repo.fintlabs.no/releases"
     }
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
 
 
-    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-4'
+    //implementation 'no.fintlabs:flais-operator-starter:0-SNAPSHOT'
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
 
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
+
+    implementation 'org.apache.commons:commons-collections4:4.4'
+
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
+    //testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'cglib:cglib-nodep:3.3.0'
+    testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'}
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 tasks.register('copyResourceDefinition', Copy) {
-    from "$buildDir/classes/java/main/META-INF/fabric8/aivenkafkaacls.fintlabs.no-v1.yml"
+    from "$buildDir/classes/java/main/META-INF/fabric8/kafkauserandacls.fintlabs.no-v1.yml"
     into "$projectDir/kustomize/base"
 }
 
@@ -51,6 +62,6 @@ tasks.named("build") { finalizedBy("copyResourceDefinition") }
 
 tasks.named("clean") {
     doLast {
-        project.delete("$projectDir/kustomize/base/aivenkafkaacls.fintlabs.no-v1.yml")
+        project.delete("$projectDir/kustomize/base/kafkauserandacls.fintlabs.no-v1.yml")
     }
 }
