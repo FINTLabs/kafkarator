@@ -51,8 +51,8 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
 
         labels.put("app.kubernetes.io/managed-by", "aivenerator");
 
-        String keyStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.key-store-password"))).orElse(RandomStringUtils.randomAscii(32));
-        String trustStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.trust-store-password"))).orElse(RandomStringUtils.randomAscii(32));
+        String keyStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.key-store-password"))).orElse(RandomStringUtils.randomAlphanumeric(32));
+        String trustStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.trust-store-password"))).orElse(RandomStringUtils.randomAlphabetic(32));
 
         return new SecretBuilder()
                 .withNewMetadata()
