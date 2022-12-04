@@ -65,7 +65,7 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
                 .findFirst();
 
         String keyStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.key-store-password"));
-        String trustStorePassword = kafkaSecret.getData().get("spring.kafka.ssl.trust-store-password");
+        String trustStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.trust-store-password"));
 
         String keyStore = thisSecret.map(secret -> secret.getData().get("client.keystore.p12")).orElse(
                 keyStoreService.createKeyStoreAndGetAsBase64(
