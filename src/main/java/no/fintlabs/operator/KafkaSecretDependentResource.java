@@ -20,7 +20,7 @@ import java.util.Optional;
 @Slf4j
 @Component
 @KubernetesDependent(
-        labelSelector = "app.kubernetes.io/managed-by=aivenerator",
+        labelSelector = "app.kubernetes.io/managed-by=kafkarator",
         resourceDiscriminator = KafkaSecretDiscriminator.class
 )
 public class KafkaSecretDependentResource extends FlaisKubernetesDependentResource<Secret, KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
