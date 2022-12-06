@@ -1,4 +1,4 @@
-# Fint Aivenerator
+# Fint Kafkarator
 
 Fint Kafkarator is an operator that creates a service user and ACL in Aiven for Kafka. 
 Username, password, ACL id and access certificate and -key will be stored in kubernetes secrets

@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
+import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResourceConfig;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
@@ -19,10 +20,10 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-@KubernetesDependent(
-        labelSelector = "app.kubernetes.io/managed-by=kafkarator",
-        resourceDiscriminator = KafkaSecretDiscriminator.class
-)
+//@KubernetesDependent(
+//        labelSelector = "app.kubernetes.io/managed-by=kafkarator",
+//        resourceDiscriminator = KafkaSecretDiscriminator.class
+//)
 public class KafkaSecretDependentResource extends FlaisKubernetesDependentResource<Secret, KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
 
     public static final String NAME_SUFFIX = "-kafka";
@@ -37,6 +38,8 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
         this.aivenProperties = aivenProperties;
         setResourceDiscriminator(discriminator);
         dependsOn(kafkaUserAndAclDependentResource);
+        configureWith(new KubernetesDependentResourceConfig<Secret>().setLabelSelector("app.kubernetes.io/managed-by=kafkarator"));
+
     }
 
     @Override
@@ -49,7 +52,7 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
                 .findFirst();
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
 
-        labels.put("app.kubernetes.io/managed-by", "aivenerator");
+        labels.put("app.kubernetes.io/managed-by", "kafkarator");
 
         String keyStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.key-store-password"))).orElse(RandomStringUtils.randomAlphanumeric(32));
         String trustStorePassword = thisSecret.map(secret -> decode(secret.getData().get("spring.kafka.ssl.trust-store-password"))).orElse(RandomStringUtils.randomAlphabetic(32));

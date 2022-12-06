@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
+import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResourceConfig;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
@@ -20,9 +21,9 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-@KubernetesDependent(
-        labelSelector = "app.kubernetes.io/managed-by=kafkarator"
-)
+//@KubernetesDependent(
+//        labelSelector = "app.kubernetes.io/managed-by=kafkarator"
+//)
 public class CertificateSecretDependentResource extends FlaisKubernetesDependentResource<Secret, KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
 
     public static final String NAME_SUFFIX = "-kafka-certificates";
@@ -45,6 +46,8 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
         this.trustStoreService = trustStoreService;
         dependsOn(kafkaSecretDependentResource, kafkaUserAndAclDependentResource);
         setResourceDiscriminator(discriminator);
+        configureWith(new KubernetesDependentResourceConfig<Secret>().setLabelSelector("app.kubernetes.io/managed-by=kafkarator"));
+
 
     }
 
@@ -82,7 +85,7 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
                 ));
 
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
-        labels.put("app.kubernetes.io/managed-by", "aivenerator");
+        labels.put("app.kubernetes.io/managed-by", "kafkarator");
 
 
         return new SecretBuilder()
