@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
-import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResourceConfig;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
@@ -21,9 +20,6 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-//@KubernetesDependent(
-//        labelSelector = "app.kubernetes.io/managed-by=kafkarator"
-//)
 public class CertificateSecretDependentResource extends FlaisKubernetesDependentResource<Secret, KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
 
     public static final String NAME_SUFFIX = "-kafka-certificates";
@@ -70,19 +66,33 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
         String keyStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.key-store-password"));
         String trustStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.trust-store-password"));
 
-        String keyStore = thisSecret.map(secret -> secret.getData().get("client.keystore.p12")).orElse(
-                keyStoreService.createKeyStoreAndGetAsBase64(
-                        kafkaUserAndAcl.getUser().getAccessCert(),
-                        kafkaUserAndAcl.getUser().getAccessKey(),
-                        aivenService.getCa(),
-                        keyStorePassword.toCharArray()
-                ));
+        String keyStore = thisSecret
+                .map(ks -> ks.getData().get("client.keystore.p12"))
+                .map(ks -> keyStoreService.verifyKeyStore(ks, keyStorePassword))
+                .orElseGet(() -> {
+                            log.info("No key store available. Creating a new one!");
 
-        String trustStore = thisSecret.map(secret -> secret.getData().get("client.truststore.jks")).orElse(
-                trustStoreService.createTrustStoreAndGetAsBase64(
-                        aivenService.getCa(),
-                        trustStorePassword.toCharArray()
-                ));
+                            return keyStoreService.createKeyStoreAndGetAsBase64(
+                                    kafkaUserAndAcl.getUser().getAccessCert(),
+                                    kafkaUserAndAcl.getUser().getAccessKey(),
+                                    aivenService.getCa(),
+                                    keyStorePassword.toCharArray()
+                            );
+                        }
+                );
+
+        String trustStore = thisSecret
+                .map(ts -> ts.getData().get("client.truststore.jks"))
+                .map(ts -> trustStoreService.verifyTrustStore(ts, trustStorePassword))
+                .orElseGet(() -> {
+                    log.info("No trust store available. Creating a new one!");
+
+                    return trustStoreService.createTrustStoreAndGetAsBase64(
+                            aivenService.getCa(),
+                            trustStorePassword.toCharArray()
+                    );
+                }
+        );
 
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "kafkarator");

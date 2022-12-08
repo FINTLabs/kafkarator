@@ -5,11 +5,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.PrivateKey;
+import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -58,6 +56,21 @@ public class KeyStoreService extends Store {
         } catch (IOException | GeneralSecurityException e) {
             log.error("An error occurred when creating key store: {}", e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    public String verifyKeyStore(String base64KeyStore, String password) {
+        try {
+            byte[] decode = Base64.getDecoder().decode(base64KeyStore);
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(new ByteArrayInputStream(decode), password.toCharArray());
+
+            log.debug("Key store is ok!");
+            return base64KeyStore;
+        } catch (KeyStoreException | CertificateException | IOException | NoSuchAlgorithmException e) {
+            log.debug("Unable to open key store with error '{}'.", e.getMessage());
+            log.error("We need to create a new one!");
+            return null;
         }
     }
 
