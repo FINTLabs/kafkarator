@@ -6,11 +6,11 @@ import io.javaoperatorsdk.operator.processing.dependent.DesiredEqualsMatcher;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import io.javaoperatorsdk.operator.processing.dependent.Updater;
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.aiven.AivenProperties;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.aiven.KafkaAclEntry;
-import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.AivenProperties;
 import no.fintlabs.aiven.AivenService;
+import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.KafkaAclEntry;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static no.fintlabs.operator.NameFactory.nameFromMetadata;
 
 @Slf4j
 @Component
@@ -39,13 +41,13 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     protected KafkaUserAndAcl desired(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
 
         return KafkaUserAndAcl.builder()
-                .user(AivenServiceUser.fromUsername(primary.getMetadata().getName()))
+                .user(AivenServiceUser.fromUsername(nameFromMetadata(primary)))
                 .aclEntries(
                         primary
                                 .getSpec()
                                 .getAcls()
                                 .stream()
-                                .map(acl -> acl.toAclEntry(primary.getMetadata().getName()))
+                                .map(acl -> acl.toAclEntry(nameFromMetadata(primary)))
                                 .collect(Collectors.toList())
                 )
                 .build();
