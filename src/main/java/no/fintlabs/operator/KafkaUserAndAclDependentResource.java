@@ -101,7 +101,7 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primaryResource) {
 
         return aivenService
-                .getUserAndAcl(primaryResource.getMetadata().getName())
+                .getUserAndAcl(nameFromMetadata(primaryResource))
                 .map(Collections::singleton)
                 .orElse(Collections.emptySet());
     }
