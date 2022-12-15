@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -64,6 +65,11 @@ public class AivenService {
                         .uri("/project/{project_name}/service/{service_name}/user", aivenProperties.getProject(), aivenProperties.getService())
                         .body(BodyInserters.fromValue(new CreateKafkaUserRequest(username)))
                         .retrieve()
+                        .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> {
+                            log.debug("User already exists");
+                            return Mono.empty();
+
+                        })
                         .bodyToMono(CreateKafkaUserResponse.class)
                         .block())
                 .orElseThrow();
@@ -101,7 +107,11 @@ public class AivenService {
                                 .build()
                 ))
                 .retrieve()
-                .bodyToMono(CreateKafkaAclEntryResponse.class)
+                .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> {
+                    log.debug("Acl already exists");
+                    return Mono.empty();
+
+                })                .bodyToMono(CreateKafkaAclEntryResponse.class)
                 .block().getAclByUsernameAndTopic(aclEntry.getUsername(), aclEntry.getTopic());
     }
 
