@@ -13,6 +13,15 @@ patches:
       kind: Deployment
       name: kafkarator
   - patch: |-
+      - op: add
+        path: "/spec/template/spec/containers/0/env/-"
+        value:
+          name: fint.aiven.service
+          value: kafka-beta
+    target:
+      kind: Deployment
+      name: kafkarator
+  - patch: |-
       - op: replace
         path: "/spec/itemPath"
         value: "vaults/aks-beta-vault/items/kafkarator"
