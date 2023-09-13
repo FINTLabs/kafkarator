@@ -112,7 +112,7 @@ jobs:
 #
 #      ## Api cluster ##
 #      - name: Bake api manifests with Kustomize
-#        uses: azure/k8s-bake@v2.2
+#        uses: azure/k8s-bake@v2.4
 #        with:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/api'
