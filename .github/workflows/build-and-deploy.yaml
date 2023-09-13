@@ -49,51 +49,57 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       ## Alpha cluster ##
-      - name: Bake alpha manifests with Kustomize
-        uses: azure/k8s-bake@v2.4
-        with:
-          renderEngine: 'kustomize'
-          kustomizationPath: 'kustomize/overlays/alpha'
-        id: bake-alpha
-
-      - uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AKS_ALPHA_FINT_GITHUB }}'
-
-      - uses: azure/use-kubelogin@v1.1
-        with:
-          kubelogin-version: 'v0.0.26'
-
-      - name: Set the target Alpha cluster.
-        uses: azure/aks-set-context@v3
-        with:
-         cluster-name: ${{ env.ALPHA_CLUSTER_NAME }}
-         resource-group: ${{ env.ALPHA_CLUSTER_RESOURCE_GROUP }}
-         admin: 'true'
-         use-kubelogin: 'true'
-
-      - name: Deploy to Alpha
-        uses: azure/k8s-deploy@v4.4
-        with:
-         manifests: ${{ steps.bake-alpha.outputs.manifestsBundle }}
-         images: |
-           ${{ steps.meta.outputs.tags }}
-         namespace: operators
-         action: deploy
-
+#      - name: Bake alpha manifests with Kustomize
+#        uses: azure/k8s-bake@v2.4
+#        with:
+#          renderEngine: 'kustomize'
+#          kustomizationPath: 'kustomize/overlays/alpha'
+#        id: bake-alpha
+#
+#      - uses: azure/login@v1
+#        with:
+#          creds: '${{ secrets.AKS_ALPHA_FINT_GITHUB }}'
+#
+#      - uses: azure/use-kubelogin@v1.1
+#        with:
+#          kubelogin-version: 'v0.0.26'
+#
+#      - name: Set the target Alpha cluster.
+#        uses: azure/aks-set-context@v3
+#        with:
+#          cluster-name: ${{ env.ALPHA_CLUSTER_NAME }}
+#          resource-group: ${{ env.ALPHA_CLUSTER_RESOURCE_GROUP }}
+#          admin: 'true'
+#          use-kubelogin: 'true'
+#
+#      - name: Deploy to Alpha
+#        uses: azure/k8s-deploy@v4.4
+#        with:
+#          manifests: ${{ steps.bake-alpha.outputs.manifestsBundle }}
+#          images: |
+#            ${{ steps.meta.outputs.tags }}
+#          namespace: operators
+#          action: deploy
+#
 #      ## Beta cluster ##
 #      - name: Bake beta manifests with Kustomize
-#        uses: azure/k8s-bake@v2.2
+#        uses: azure/k8s-bake@v2.4
 #        with:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/beta'
 #        id: bake-beta
-#      - name: Set the target Beta cluster.
-#        uses: azure/aks-set-context@v1
+#
+#      - uses: azure/login@v1
 #        with:
 #          creds: '${{ secrets.AKS_BETA_FINT_GITHUB }}'
+
+#      - name: Set the target Beta cluster.
+#        uses: azure/aks-set-context@v3
+#        with:
 #          cluster-name: ${{ env.BETA_CLUSTER_NAME }}
 #          resource-group: ${{ env.BETA_CLUSTER_RESOURCE_GROUP }}
+#          admin: 'true'
+#          use-kubelogin: 'true'
 #
 #      - name: Deploy to Beta
 #        uses: azure/k8s-deploy@v4.4
@@ -111,12 +117,18 @@ jobs:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/api'
 #        id: bake-api
-#      - name: Set the target Api cluster.
-#        uses: azure/aks-set-context@v1
+#
+#      - uses: azure/login@v1
 #        with:
 #          creds: '${{ secrets.AKS_API_FINT_GITHUB }}'
+
+#      - name: Set the target Api cluster.
+#        uses: azure/aks-set-context@v3
+#        with:
 #          cluster-name: ${{ env.API_CLUSTER_NAME }}
 #          resource-group: ${{ env.API_CLUSTER_RESOURCE_GROUP }}
+#          admin: 'true'
+#          use-kubelogin: 'true'
 #
 #      - name: Deploy to API
 #        uses: azure/k8s-deploy@v4.4
