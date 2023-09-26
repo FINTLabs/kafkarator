@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -34,14 +34,14 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,enable=true,priority=100,prefix=sha-,suffix=,format=short
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3.2.0
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -50,7 +50,7 @@ jobs:
 
       ## Alpha cluster ##
 #      - name: Bake alpha manifests with Kustomize
-#        uses: azure/k8s-bake@v2.4
+#        uses: azure/k8s-bake@v2
 #        with:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/alpha'
@@ -73,7 +73,7 @@ jobs:
 #          use-kubelogin: 'true'
 #
 #      - name: Deploy to Alpha
-#        uses: azure/k8s-deploy@v4.4
+#        uses: azure/k8s-deploy@v4.9
 #        with:
 #          manifests: ${{ steps.bake-alpha.outputs.manifestsBundle }}
 #          images: |
@@ -83,7 +83,7 @@ jobs:
 #
 #      ## Beta cluster ##
 #      - name: Bake beta manifests with Kustomize
-#        uses: azure/k8s-bake@v2.4
+#        uses: azure/k8s-bake@v2
 #        with:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/beta'
@@ -102,7 +102,7 @@ jobs:
 #          use-kubelogin: 'true'
 #
 #      - name: Deploy to Beta
-#        uses: azure/k8s-deploy@v4.4
+#        uses: azure/k8s-deploy@v4.9
 #        with:
 #          manifests: ${{ steps.bake-beta.outputs.manifestsBundle }}
 #          images: |
@@ -112,7 +112,7 @@ jobs:
 #
 #      ## Api cluster ##
 #      - name: Bake api manifests with Kustomize
-#        uses: azure/k8s-bake@v2.4
+#        uses: azure/k8s-bake@v2
 #        with:
 #          renderEngine: 'kustomize'
 #          kustomizationPath: 'kustomize/overlays/api'
@@ -131,7 +131,7 @@ jobs:
 #          use-kubelogin: 'true'
 #
 #      - name: Deploy to API
-#        uses: azure/k8s-deploy@v4.4
+#        uses: azure/k8s-deploy@v4.9
 #        with:
 #          manifests: ${{ steps.bake-API.outputs.manifestsBundle }}
 #          images: |
