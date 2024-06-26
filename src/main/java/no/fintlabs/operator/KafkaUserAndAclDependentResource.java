@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.fintlabs.operator.NameFactory.nameFromMetadata;
+import static no.fintlabs.operator.NameFactory.generateNameFromMetadata;
 
 @Slf4j
 @Component
@@ -41,13 +41,13 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     protected KafkaUserAndAcl desired(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
 
         return KafkaUserAndAcl.builder()
-                .user(AivenServiceUser.fromUsername(nameFromMetadata(primary)))
+                .user(AivenServiceUser.fromUsername(generateNameFromMetadata(primary)))
                 .aclEntries(
                         primary
                                 .getSpec()
                                 .getAcls()
                                 .stream()
-                                .map(acl -> acl.toAclEntry(nameFromMetadata(primary)))
+                                .map(acl -> acl.toAclEntry(generateNameFromMetadata(primary)))
                                 .collect(Collectors.toList())
                 )
                 .build();
@@ -101,7 +101,7 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primaryResource) {
 
         return aivenService
-                .getUserAndAcl(nameFromMetadata(primaryResource))
+                .getUserAndAcl(generateNameFromMetadata(primaryResource))
                 .map(Collections::singleton)
                 .orElse(Collections.emptySet());
     }
