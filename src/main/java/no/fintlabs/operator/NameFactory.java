@@ -12,33 +12,26 @@ public class NameFactory {
 
 
         String name = nameFromMetadata(metadata);
-        String orgId = metadata.getMetadata().getLabels().get("fintlabs.no/org-id");
+        String orgId = metadata.getMetadata().getLabels().get("fintlabs.no/org-id").replace(".", "-");
         String team = metadata.getMetadata().getLabels().get("fintlabs.no/team");
 
+        // Remove org-id if name is too long
+        if (nameFromMetadataLength(metadata) >= MAX_LENGTH && name.contains(orgId)) {
+            name = name.replace(orgId + "__", "");
+        }
+
         // Remove -io from org-id if name is too long
-        if (nameFromMetadataLength(metadata) > MAX_LENGTH && name.contains("-io_")) {
+        if (nameFromMetadataLength(metadata) >= MAX_LENGTH && name.contains("-io_")) {
             name = name.replace("-io_", "-");
         }
 
         // Remove team if name is too long
-        if (nameFromMetadataLength(metadata) > MAX_LENGTH && name.contains("_" + team)) {
-            name = name.replace("_" + team, "");
+        if (nameFromMetadataLength(metadata) >= MAX_LENGTH && name.contains("_" + team)) {
+            name = name.replace("_" + team + "_", "");
         }
 
-        if (nameFromMetadataLength(metadata) > MAX_LENGTH && name.contains(team + "-")) {
-            name = name.replace(team + "-", "");
-        }
+        return name;
 
-        // Remove org-id if name is too long
-        if (nameFromMetadataLength(metadata) > MAX_LENGTH && name.contains(orgId)) {
-            name = name.replace(orgId, "");
-        }
-
-        if (nameFromMetadataLength(metadata) >= MAX_LENGTH) {
-            return name;
-        } else {
-            throw new IllegalArgumentException("Name is too long: " + name);
-        }
     }
 
     public static int nameFromMetadataLength(HasMetadata metadata) {
