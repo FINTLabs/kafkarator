@@ -10,7 +10,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -63,5 +62,24 @@ class AivenServiceTest {
                 .setBody("Internal Server Error"));
 
         assertThrows(WebClientResponseException.class, () -> service.getUserAndAcl("user_with_server_error"));
+    }
+
+    @Test
+    void getUserAndAcl_ShouldReturnUserAndAcl_WhenUserExists() {
+        String userResponseJson = "{ \"username\": \"test_user\", \"...\": \"...\" }";
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setBody(userResponseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        String aclResponseJson = "{ \"entries\": [ { \"permission\": \"read\", \"username\": \"test_user\" } ] }";
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setBody(aclResponseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        Optional<KafkaUserAndAcl> result = service.getUserAndAcl("test_user");
+
+        assertTrue(result.isPresent(), "Expected to find KafkaUserAndAcl");
     }
 }
