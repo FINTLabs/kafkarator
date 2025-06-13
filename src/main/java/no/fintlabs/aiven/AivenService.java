@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.operator.KafkaUserAndAcl;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -53,12 +54,17 @@ public class AivenService {
 
 
         } catch (WebClientResponseException e) {
-            log.debug("Could not find  user {}. Proceeding to create...", username);
-            return Optional.empty();
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.debug("Could not find user {}. Proceeding to create...", username);
+                return Optional.empty();
+            } else {
+                log.error("Error fetching user or ACL for {}: {}", username, e.getMessage());
+                throw e;
+            }
         }
     }
 
-    public AivenServiceUser createUserForService(String username)  {
+    public AivenServiceUser createUserForService(String username) {
         log.debug("Creating user {} for service {}", username, aivenProperties.getService());
 
         CreateKafkaUserResponse createKafkaUserResponse = Optional.ofNullable(webClient.post()
@@ -79,7 +85,7 @@ public class AivenService {
         return createKafkaUserResponse.getUser();
     }
 
-    public void deleteUserForService( String username) {
+    public void deleteUserForService(String username) {
         log.debug("Deleting user {} from service {}", username, aivenProperties.getService());
 
         webClient
@@ -111,11 +117,11 @@ public class AivenService {
                     log.debug("Acl already exists");
                     return Mono.empty();
 
-                })                .bodyToMono(CreateKafkaAclEntryResponse.class)
+                }).bodyToMono(CreateKafkaAclEntryResponse.class)
                 .block().getAclByUsernameAndTopic(aclEntry.getUsername(), aclEntry.getTopic());
     }
 
-    public void deleteAclEntryForService( String aclId) {
+    public void deleteAclEntryForService(String aclId) {
         log.debug("Deleting ACL entry for service {}", aivenProperties.getService());
 
         webClient
