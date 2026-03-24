@@ -6,12 +6,15 @@ import no.fintlabs.aiven.AivenService;
 import no.fintlabs.keystore.KeyStoreService;
 import no.fintlabs.keystore.TrustStoreService;
 import no.fintlabs.operator.CertificateSecretDependentResource;
+import no.fintlabs.operator.CertificateMetricsService;
 import no.fintlabs.operator.CertificateSecretDiscriminator;
 import no.fintlabs.operator.KafkaSecretDependentResource;
 import no.fintlabs.operator.KafkaSecretDiscriminator;
 import no.fintlabs.operator.KafkaUserAclReconciler;
 import no.fintlabs.operator.KafkaUserAndAclDependentResource;
 import no.fintlabs.operator.KafkaUserAndAclWorkflow;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +57,7 @@ class ApplicationContextTest {
             KafkaUserAndAclDependentResource.class,
             KafkaSecretDependentResource.class,
             CertificateSecretDependentResource.class,
+            CertificateMetricsService.class,
             KafkaSecretDiscriminator.class,
             CertificateSecretDiscriminator.class,
             KeyStoreService.class,
@@ -69,6 +73,11 @@ class ApplicationContextTest {
         @Bean
         AivenService aivenService() {
             return mock(AivenService.class);
+        }
+
+        @Bean
+        MeterRegistry meterRegistry() {
+            return new SimpleMeterRegistry();
         }
     }
 }
