@@ -1,6 +1,6 @@
 package no.fintlabs.aiven;
 
-import lombok.*;
+import lombok.Data;
 
 import java.io.Serializable;
 

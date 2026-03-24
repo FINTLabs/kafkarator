@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.Matcher;
-import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependentResourceConfig;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
@@ -14,7 +13,6 @@ import no.fintlabs.aiven.AivenProperties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -52,10 +50,10 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
 
         String keyStorePassword = thisSecret
                 .map(secret -> decode(secret.getData().get("spring.kafka.ssl.key-store-password")))
-                .orElse(RandomStringUtils.randomAlphanumeric(32));
+                .orElse(RandomStringUtils.secure().nextAlphanumeric(32));
         String trustStorePassword = thisSecret
                 .map(secret -> decode(secret.getData().get("spring.kafka.ssl.trust-store-password")))
-                .orElse(RandomStringUtils.randomAlphabetic(32));
+                .orElse(RandomStringUtils.secure().nextAlphanumeric(32));
 
         return new SecretBuilder()
                 .withNewMetadata()
@@ -84,13 +82,5 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
     @Override
     public Matcher.Result<Secret> match(Secret actualResource, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         return super.match(actualResource, primary, context);
-    }
-
-    private static String encode(String value) {
-        return Base64.getEncoder().encodeToString(value.getBytes());
-    }
-
-    private String decode(String value) {
-        return new String(Base64.getDecoder().decode(value.getBytes()));
     }
 }

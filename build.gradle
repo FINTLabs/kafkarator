@@ -1,13 +1,18 @@
 plugins {
-    id 'org.springframework.boot' version '2.7.4'
-    id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+    id 'org.springframework.boot' version '3.5.12'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
     id 'groovy'
 }
 
 group = 'no.fintlabs'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 jar {
     enabled = false
@@ -30,22 +35,17 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
-
-
-    //implementation 'no.fintlabs:flais-operator-starter:0-SNAPSHOT'
-    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0'
 
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
 
-    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.apache.commons:commons-collections4:4.5.0'
 
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok:1.18.44'
+    annotationProcessor 'org.projectlombok:lombok:1.18.44'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    //testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'cglib:cglib-nodep:3.3.0'
     testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'

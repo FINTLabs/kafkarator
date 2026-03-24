@@ -11,8 +11,6 @@ import no.fintlabs.keystore.KeyStoreService
 import no.fintlabs.keystore.TrustStoreService
 import spock.lang.Specification
 
-import java.util.Base64
-
 class CertificateSecretDependentResourceSpec extends Specification {
 
     private AivenService aivenService

@@ -8,8 +8,6 @@ import no.fintlabs.aiven.AivenProperties
 import no.fintlabs.aiven.AivenService
 import spock.lang.Specification
 
-import java.util.Base64
-
 class KafkaSecretDependentResourceSpec extends Specification {
 
     private AivenProperties aivenProperties
