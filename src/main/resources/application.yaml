@@ -2,6 +2,12 @@ spring:
   application:
     name: kafkarator
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
 logging:
   level:
     no.fintlabs: debug
@@ -13,3 +19,4 @@ fint:
     project: fintlabs
     service:
     kafka-bootstrap-servers:
+    certificate-rotation-threshold: 30d

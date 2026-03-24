@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.SecretBuilder
 import io.fabric8.kubernetes.client.KubernetesClient
 import io.javaoperatorsdk.operator.api.reconciler.Context
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.fintlabs.aiven.AivenProperties
 import no.fintlabs.aiven.AivenService
 import no.fintlabs.aiven.AivenServiceUser
@@ -11,9 +12,14 @@ import no.fintlabs.keystore.KeyStoreService
 import no.fintlabs.keystore.TrustStoreService
 import spock.lang.Specification
 
+import java.time.Duration
+import java.time.Instant
+
 class CertificateSecretDependentResourceSpec extends Specification {
 
     private AivenService aivenService
+    private AivenProperties aivenProperties
+    private CertificateMetricsService certificateMetricsService
     private KeyStoreService keyStoreService
     private TrustStoreService trustStoreService
     private CertificateSecretDependentResource resource
@@ -21,6 +27,8 @@ class CertificateSecretDependentResourceSpec extends Specification {
 
     def setup() {
         aivenService = Mock()
+        aivenProperties = new AivenProperties(certificateRotationThreshold: Duration.ofDays(30))
+        certificateMetricsService = new CertificateMetricsService(new SimpleMeterRegistry())
         keyStoreService = Mock()
         trustStoreService = Mock()
         def workflow = new KafkaUserAndAclWorkflow()
@@ -42,6 +50,8 @@ class CertificateSecretDependentResourceSpec extends Specification {
                 kafkaSecretDependentResource,
                 kafkaUserAndAclDependentResource,
                 aivenService,
+                aivenProperties,
+                certificateMetricsService,
                 keyStoreService,
                 new CertificateSecretDiscriminator(),
                 trustStoreService
@@ -68,6 +78,8 @@ class CertificateSecretDependentResourceSpec extends Specification {
 
         then:
         2 * aivenService.getCa() >> "ca-cert"
+        1 * keyStoreService.inspectKeyStore("generated-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.valid(Instant.parse("2028-01-01T00:00:00Z"))
         1 * keyStoreService.createKeyStoreAndGetAsBase64("client-cert", "client-key", "ca-cert", {
             new String(it) == "key-pass"
         }) >> "generated-key-store"
@@ -78,6 +90,8 @@ class CertificateSecretDependentResourceSpec extends Specification {
         secret.metadata.labels["app.kubernetes.io/managed-by"] == "kafkarator"
         secret.data["client.keystore.p12"] == "generated-key-store"
         secret.data["client.truststore.jks"] == "generated-trust-store"
+        secret.metadata.annotations[CertificateSecretDependentResource.CERTIFICATE_NOT_AFTER_ANNOTATION] == "2028-01-01T00:00:00Z"
+        secret.metadata.annotations[CertificateSecretDependentResource.LAST_ROTATED_AT_ANNOTATION] != null
     }
 
     def "desired reuses existing stores when verification succeeds"() {
@@ -106,7 +120,8 @@ class CertificateSecretDependentResourceSpec extends Specification {
         def secret = resource.desired(primary, context)
 
         then:
-        1 * keyStoreService.verifyKeyStore("existing-key-store", "key-pass") >> "existing-key-store"
+        2 * keyStoreService.inspectKeyStore("existing-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.valid(Instant.now().plus(Duration.ofDays(90)))
         1 * trustStoreService.verifyTrustStore("existing-trust-store", "trust-pass") >> "existing-trust-store"
         0 * keyStoreService.createKeyStoreAndGetAsBase64(_, _, _, _)
         0 * trustStoreService.createTrustStoreAndGetAsBase64(_, _)
@@ -114,7 +129,7 @@ class CertificateSecretDependentResourceSpec extends Specification {
         secret.data["client.truststore.jks"] == "existing-trust-store"
     }
 
-    def "desired regenerates stores when existing data fails verification"() {
+    def "desired regenerates stores when existing key store is unreadable"() {
         given:
         def primary = primaryResource()
         def kafkaUserAndAcl = KafkaUserAndAcl.builder()
@@ -140,8 +155,10 @@ class CertificateSecretDependentResourceSpec extends Specification {
         def secret = resource.desired(primary, context)
 
         then:
-        1 * keyStoreService.verifyKeyStore("broken-key-store", "key-pass") >> null
-        1 * trustStoreService.verifyTrustStore("broken-trust-store", "trust-pass") >> null
+        1 * keyStoreService.inspectKeyStore("broken-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.invalid("bad key store")
+        1 * keyStoreService.inspectKeyStore("regenerated-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.valid(Instant.parse("2028-02-01T00:00:00Z"))
         2 * aivenService.getCa() >> "ca-cert"
         1 * keyStoreService.createKeyStoreAndGetAsBase64("client-cert", "client-key", "ca-cert", {
             new String(it) == "key-pass"
@@ -151,6 +168,49 @@ class CertificateSecretDependentResourceSpec extends Specification {
         }) >> "regenerated-trust-store"
         secret.data["client.keystore.p12"] == "regenerated-key-store"
         secret.data["client.truststore.jks"] == "regenerated-trust-store"
+    }
+
+    def "desired regenerates stores when existing certificate expires within threshold"() {
+        given:
+        def primary = primaryResource()
+        def kafkaUserAndAcl = KafkaUserAndAcl.builder()
+                .user(AivenServiceUser.builder()
+                        .username("resolved-user")
+                        .accessCert("client-cert")
+                        .accessKey("client-key")
+                        .build())
+                .build()
+        def kafkaSecret = kafkaSecret(primary, "key-pass", "trust-pass")
+        def existingSecret = new SecretBuilder()
+                .withNewMetadata()
+                .withName("sample-user-kafka-certificates")
+                .withNamespace("default")
+                .endMetadata()
+                .addToData("client.keystore.p12", "soon-expiring-key-store")
+                .addToData("client.truststore.jks", "existing-trust-store")
+                .build()
+        context.getSecondaryResource(KafkaUserAndAcl.class) >> Optional.of(kafkaUserAndAcl)
+        context.getSecondaryResources(Secret.class) >> ([kafkaSecret, existingSecret] as Set)
+
+        when:
+        def secret = resource.desired(primary, context)
+
+        then:
+        1 * keyStoreService.inspectKeyStore("soon-expiring-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.valid(Instant.now().plus(Duration.ofDays(7)))
+        1 * keyStoreService.inspectKeyStore("rotated-key-store", "key-pass") >>
+                KeyStoreService.KeyStoreInspection.valid(Instant.parse("2028-03-01T00:00:00Z"))
+        2 * aivenService.getCa() >> "ca-cert"
+        1 * keyStoreService.createKeyStoreAndGetAsBase64("client-cert", "client-key", "ca-cert", {
+            new String(it) == "key-pass"
+        }) >> "rotated-key-store"
+        1 * trustStoreService.createTrustStoreAndGetAsBase64("ca-cert", {
+            new String(it) == "trust-pass"
+        }) >> "rotated-trust-store"
+        0 * trustStoreService.verifyTrustStore(_, _)
+        secret.data["client.keystore.p12"] == "rotated-key-store"
+        secret.data["client.truststore.jks"] == "rotated-trust-store"
+        secret.metadata.annotations[CertificateSecretDependentResource.CERTIFICATE_NOT_AFTER_ANNOTATION] == "2028-03-01T00:00:00Z"
     }
 
     private static KafkaUserAndAclCrd primaryResource() {

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import spock.lang.Specification
 
 import java.security.UnrecoverableKeyException
+import java.time.Duration
 
 import static no.fintlabs.keystore.TestUtil.isBase64
 
@@ -167,5 +168,33 @@ class KeyStoreServiceSpec extends Specification {
         then:
         store
         base64
+    }
+
+    def "Inspect keystore returns notAfter and flags expired certificates for rotation"() {
+        given:
+        def service = new KeyStoreService()
+        def password = RandomStringUtils.randomAscii(32).toCharArray()
+        def keyStore = service.storeToBase64(service.createKeyStore(cert, key, ca, password), password)
+
+        when:
+        def inspection = service.inspectKeyStore(keyStore, new String(password))
+
+        then:
+        inspection.readable()
+        inspection.notAfter() != null
+        inspection.needsRotation(Duration.ZERO)
+    }
+
+    def "Inspect keystore returns unreadable when payload is invalid"() {
+        given:
+        def service = new KeyStoreService()
+
+        when:
+        def inspection = service.inspectKeyStore("not-a-keystore", "password")
+
+        then:
+        !inspection.readable()
+        inspection.notAfter() == null
+        inspection.needsRotation(Duration.ofDays(30))
     }
 }

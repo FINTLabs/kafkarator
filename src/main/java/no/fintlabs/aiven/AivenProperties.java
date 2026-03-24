@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 @Getter
 @Setter
 @Configuration
@@ -16,5 +18,6 @@ public class AivenProperties {
     private String project = "fintlabs";
     private String service;
     private String kafkaBootstrapServers;
+    private Duration certificateRotationThreshold = Duration.ofDays(30);
 
 }
