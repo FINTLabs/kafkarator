@@ -36,16 +36,7 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
     private final KeyStoreService keyStoreService;
     private final TrustStoreService trustStoreService;
 
-    public CertificateSecretDependentResource(
-            FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> workflow,
-            KubernetesClient kubernetesClient,
-            KafkaSecretDependentResource kafkaSecretDependentResource,
-            KafkaUserAndAclDependentResource kafkaUserAndAclDependentResource,
-            AivenService aivenService,
-            AivenProperties aivenProperties,
-            CertificateMetricsService certificateMetricsService,
-            KeyStoreService keyStoreService,
-            CertificateSecretDiscriminator discriminator, TrustStoreService trustStoreService) {
+    public CertificateSecretDependentResource(FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> workflow, KubernetesClient kubernetesClient, KafkaSecretDependentResource kafkaSecretDependentResource, KafkaUserAndAclDependentResource kafkaUserAndAclDependentResource, AivenService aivenService, AivenProperties aivenProperties, CertificateMetricsService certificateMetricsService, KeyStoreService keyStoreService, CertificateSecretDiscriminator discriminator, TrustStoreService trustStoreService) {
 
         super(Secret.class, workflow, kubernetesClient);
         this.aivenService = aivenService;
@@ -56,8 +47,6 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
         dependsOn(kafkaSecretDependentResource, kafkaUserAndAclDependentResource);
         setResourceDiscriminator(discriminator);
         configureWith(new KubernetesDependentResourceConfig<Secret>().setLabelSelector("app.kubernetes.io/managed-by=kafkarator"));
-
-
     }
 
     @Override
@@ -70,70 +59,39 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
             KafkaUserAndAcl kafkaUserAndAcl = context.getSecondaryResource(KafkaUserAndAcl.class).orElseThrow();
             Secret kafkaSecret = context.getSecondaryResources(Secret.class)
                     .stream()
-                    .filter(secret -> secret.getMetadata().getName().equals(KafkaSecretDependentResource.getResourceName(resource)/*resource.getMetadata().getName() + KafkaSecretDependentResource.NAME_SUFFIX*/))
+                    .filter(secret -> secret.getMetadata().getName().equals(KafkaSecretDependentResource.getResourceName(resource)))
                     .findFirst()
                     .orElseThrow();
 
             Optional<Secret> thisSecret = context.getSecondaryResources(Secret.class)
                     .stream()
-                    .filter(secret -> secret.getMetadata().getName().equals(getResourceName(resource)/*resource.getMetadata().getName() + NAME_SUFFIX)*/))
+                    .filter(secret -> secret.getMetadata().getName().equals(getResourceName(resource)))
                     .findFirst();
 
             String keyStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.key-store-password"));
             String trustStorePassword = decode(kafkaSecret.getData().get("spring.kafka.ssl.trust-store-password"));
 
-            String existingKeyStore = thisSecret
-                    .map(secret -> secret.getData().get("client.keystore.p12"))
-                    .orElse(null);
-            KeyStoreService.KeyStoreInspection keyStoreInspection = existingKeyStore == null
-                    ? KeyStoreService.KeyStoreInspection.invalid("No existing key store")
-                    : keyStoreService.inspectKeyStore(existingKeyStore, keyStorePassword);
+            String existingKeyStore = thisSecret.map(secret -> secret.getData().get("client.keystore.p12")).orElse(null);
+            KeyStoreService.KeyStoreInspection keyStoreInspection = existingKeyStore == null ? KeyStoreService.KeyStoreInspection.invalid("No existing key store") : keyStoreService.inspectKeyStore(existingKeyStore, keyStorePassword);
             certificateMetricsService.recordInspection(resource, aivenProperties.getService(), keyStoreInspection, aivenProperties.getCertificateRotationThreshold());
             boolean rotateCredentials = keyStoreInspection.needsRotation(aivenProperties.getCertificateRotationThreshold());
             rotationAttempted = rotateCredentials;
 
             if (rotateCredentials) {
-                log.info(
-                        "Rotating Kafka client certificate for {} because {}",
-                        resource.getMetadata().getName(),
-                        rotationReason(existingKeyStore, keyStoreInspection)
-                );
+                log.info("Rotating Kafka client certificate for {} because {}", resource.getMetadata().getName(), rotationReason(existingKeyStore, keyStoreInspection));
             }
 
-            String keyStore = rotateCredentials
-                    ? keyStoreService.createKeyStoreAndGetAsBase64(
-                    kafkaUserAndAcl.getUser().getAccessCert(),
-                    kafkaUserAndAcl.getUser().getAccessKey(),
-                    aivenService.getCa(),
-                    keyStorePassword.toCharArray()
-            )
-                    : existingKeyStore;
+            String keyStore = rotateCredentials ? keyStoreService.createKeyStoreAndGetAsBase64(kafkaUserAndAcl.getUser().getAccessCert(), kafkaUserAndAcl.getUser().getAccessKey(), aivenService.getCa(), keyStorePassword.toCharArray()) : existingKeyStore;
 
-            String trustStore = rotateCredentials
-                    ? trustStoreService.createTrustStoreAndGetAsBase64(
-                    aivenService.getCa(),
-                    trustStorePassword.toCharArray()
-            )
-                    : thisSecret
-                      .map(ts -> ts.getData().get("client.truststore.jks"))
-                      .map(ts -> trustStoreService.verifyTrustStore(ts, trustStorePassword))
-                      .orElseGet(() -> {
-                          log.info("No trust store available. Creating a new one!");
+            String trustStore = rotateCredentials ? trustStoreService.createTrustStoreAndGetAsBase64(aivenService.getCa(), trustStorePassword.toCharArray()) : thisSecret.map(ts -> ts.getData().get("client.truststore.jks")).map(ts -> trustStoreService.verifyTrustStore(ts, trustStorePassword)).orElseGet(() -> {
+                log.info("No trust store available. Creating a new one!");
 
-                          return trustStoreService.createTrustStoreAndGetAsBase64(
-                                  aivenService.getCa(),
-                                  trustStorePassword.toCharArray()
-                          );
-                      });
+                return trustStoreService.createTrustStoreAndGetAsBase64(aivenService.getCa(), trustStorePassword.toCharArray());
+            });
 
             HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
             labels.put("app.kubernetes.io/managed-by", "kafkarator");
-            Map<String, String> annotations = new HashMap<>(
-                    thisSecret
-                            .map(Secret::getMetadata)
-                            .map(metadata -> Optional.ofNullable(metadata.getAnnotations()).orElse(Collections.emptyMap()))
-                            .orElse(Collections.emptyMap())
-            );
+            Map<String, String> annotations = new HashMap<>(thisSecret.map(Secret::getMetadata).map(metadata -> Optional.ofNullable(metadata.getAnnotations()).orElse(Collections.emptyMap())).orElse(Collections.emptyMap()));
             KeyStoreService.KeyStoreInspection resultingKeyStoreInspection = keyStoreService.inspectKeyStore(keyStore, keyStorePassword);
             certificateMetricsService.updateResourceState(resource, aivenProperties.getService(), resultingKeyStoreInspection, aivenProperties.getCertificateRotationThreshold());
             if (resultingKeyStoreInspection.notAfter() != null) {
@@ -145,17 +103,7 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
             }
 
 
-            return new SecretBuilder()
-                    .withNewMetadata()
-                    .withName(getResourceName(resource))
-                    .withNamespace(resource.getMetadata().getNamespace())
-                    .withLabels(labels)
-                    .withAnnotations(annotations)
-                    .endMetadata()
-                    .withType("Opaque")
-                    .addToData("client.keystore.p12", keyStore)
-                    .addToData("client.truststore.jks", trustStore)
-                    .build();
+            return new SecretBuilder().withNewMetadata().withName(getResourceName(resource)).withNamespace(resource.getMetadata().getNamespace()).withLabels(labels).withAnnotations(annotations).endMetadata().withType("Opaque").addToData("client.keystore.p12", keyStore).addToData("client.truststore.jks", trustStore).build();
         } catch (RuntimeException e) {
             if (rotationAttempted) {
                 certificateMetricsService.recordRotation(resource, aivenProperties.getService(), false, "reconcile-failure");
