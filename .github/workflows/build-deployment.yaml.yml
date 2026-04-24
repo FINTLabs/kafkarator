@@ -1,0 +1,57 @@
+name: Build and deploy
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select environment"
+        required: true
+        default: "alpha"
+        type: choice
+        options: [alpha, beta, api]
+
+permissions:
+  actions: read
+  id-token: write
+  contents: write
+  packages: write
+
+jobs:
+  build-publish:
+    uses: ./.github/workflows/.build-publish-docker.yaml
+    secrets: inherit
+
+  deploy-alpha:
+    if: github.event.name == 'workflow_dispatch' && inputs.environment == 'alpha'
+    uses: ./.github/workflows/.cluster-deploy.yaml
+    needs: build-publish
+    secrets: inherit
+    with:
+      environment: alpha
+      image-tags: ${{ needs.build-publish.outputs.image-tags }}
+
+
+  deploy-beta:
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'beta'
+    uses: ./.github/workflows/.cluster-deploy.yaml
+    needs: build-publish
+    secrets: inherit
+    with:
+      environment: beta
+      image-tags: ${{ needs.build-publish.outputs.image-tags }}
+
+  deploy-api:
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'api'
+    uses: ./.github/workflows/.cluster-deploy.yaml
+    needs: build-publish
+    secrets: inherit
+    with:
+      environment: api
+      image-tags: ${{ needs.build-publish.outputs.image-tags }}
+
+  create-release:
+    if: github.ref == 'refs/heads/prod'
+    uses: ./.github/workflows/.create-release.yaml
+    needs: [build-publish, deploy-api]
+    secrets: inherit
+    with:
+      image-tags: ${{ needs.build-publish.outputs.image-tags }}
