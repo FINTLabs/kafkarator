@@ -32,7 +32,7 @@ jobs:
           kustomizationPath: "kustomize/overlays/${{ inputs.environment }}"
 
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: "${{ secrets[format('AKS_{0}_FINT_GITHUB', inputs.environment )] }}"
 
