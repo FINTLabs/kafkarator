@@ -14,7 +14,6 @@ import no.fintlabs.keystore.KeyStoreService;
 import no.fintlabs.keystore.TrustStoreService;
 import org.springframework.stereotype.Component;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -85,14 +84,14 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
                 .map(ts -> ts.getData().get("client.truststore.jks"))
                 .map(ts -> trustStoreService.verifyTrustStore(ts, trustStorePassword))
                 .orElseGet(() -> {
-                    log.info("No trust store available. Creating a new one!");
+                            log.info("No trust store available. Creating a new one!");
 
-                    return trustStoreService.createTrustStoreAndGetAsBase64(
-                            aivenService.getCa(),
-                            trustStorePassword.toCharArray()
-                    );
-                }
-        );
+                            return trustStoreService.createTrustStoreAndGetAsBase64(
+                                    aivenService.getCa(),
+                                    trustStorePassword.toCharArray()
+                            );
+                        }
+                );
 
         HashMap<String, String> labels = new HashMap<>(resource.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "kafkarator");
@@ -118,14 +117,5 @@ public class CertificateSecretDependentResource extends FlaisKubernetesDependent
     @Override
     public Matcher.Result<Secret> match(Secret actualResource, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         return super.match(actualResource, primary, context);
-    }
-
-    private String encode(String value) {
-
-        return Base64.getEncoder().encodeToString(value.getBytes());
-    }
-
-    private String decode(String value) {
-        return new String(Base64.getDecoder().decode(value.getBytes()));
     }
 }
