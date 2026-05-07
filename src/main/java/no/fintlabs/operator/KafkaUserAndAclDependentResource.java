@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.fintlabs.operator.NameFactory.nameFromMetadata;
+import static no.fintlabs.operator.NameFactory.serviceUserName;
 
 @Slf4j
 @Component
@@ -40,14 +40,18 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     @Override
     protected KafkaUserAndAcl desired(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
 
+        String orgName = primary.getMetadata().getLabels().get("fintlabs.no/org-id");
+        String teamName = primary.getMetadata().getLabels().get("fintlabs.no/team");
+        String appName = primary.getMetadata().getName();
+
         return KafkaUserAndAcl.builder()
-                .user(AivenServiceUser.fromUsername(nameFromMetadata(primary)))
+                .user(AivenServiceUser.fromUsername(serviceUserName(orgName, teamName, appName)))
                 .aclEntries(
                         primary
                                 .getSpec()
                                 .getAcls()
                                 .stream()
-                                .map(acl -> acl.toAclEntry(nameFromMetadata(primary)))
+                                .map(acl -> acl.toAclEntry(serviceUserName(orgName, teamName, appName)))
                                 .collect(Collectors.toList())
                 )
                 .build();
@@ -98,10 +102,14 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
 
 
     @Override
-    public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primaryResource) {
+    public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primary) {
+
+        String orgName = primary.getMetadata().getLabels().get("fintlabs.no/org-id");
+        String teamName = primary.getMetadata().getLabels().get("fintlabs.no/team");
+        String appName = primary.getMetadata().getName();
 
         return aivenService
-                .getUserAndAcl(nameFromMetadata(primaryResource))
+                .getUserAndAcl(serviceUserName(orgName, teamName, appName))
                 .map(Collections::singleton)
                 .orElse(Collections.emptySet());
     }
