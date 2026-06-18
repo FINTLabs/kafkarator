@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -36,22 +35,35 @@ public class AivenService {
 
     public Optional<KafkaUserAndAcl> getUserAndAcl(String username) {
         try {
-            // TODO: 22/11/2022 Create separate models for GET
-            CreateKafkaUserResponse createKafkaUserResponse = webClient.get()
-                    .uri("/project/{project_name}/service/{service_name}/user/{username}", aivenProperties.getProject(), aivenProperties.getService(), username)
+
+            GetKafkaUserResponse getKafkaUserResponse = webClient.get()
+                    .uri(
+                            "/project/{project_name}/service/{service_name}/user/{username}",
+                            aivenProperties.getProject(),
+                            aivenProperties.getService(),
+                            username
+                    )
                     .retrieve()
-                    .bodyToMono(CreateKafkaUserResponse.class)
+                    .bodyToMono(GetKafkaUserResponse.class)
                     .block();
 
-            // TODO: 22/11/2022 Create separate models for GET
-            CreateKafkaAclEntryResponse aclEntryResponse = webClient.get()
-                    .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
+            GetKafkaAclEntryResponse aclEntryResponse = webClient.get()
+                    .uri(
+                            "/project/{project_name}/service/{service_name}/acl",
+                            aivenProperties.getProject(),
+                            aivenProperties.getService()
+                    )
                     .retrieve()
-                    .bodyToMono(CreateKafkaAclEntryResponse.class)
+                    .bodyToMono(GetKafkaAclEntryResponse.class)
                     .block();
 
-            return Optional.ofNullable(KafkaUserAndAcl.fromUserAndAclResponse(createKafkaUserResponse, aclEntryResponse));
+            if (getKafkaUserResponse == null || getKafkaUserResponse.getUser() == null || aclEntryResponse == null) {
+                return Optional.empty();
+            }
 
+            return Optional.of(
+                    KafkaUserAndAcl.fromUserAndAclResponse(getKafkaUserResponse, aclEntryResponse)
+            );
 
         } catch (WebClientResponseException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
@@ -64,25 +76,48 @@ public class AivenService {
         }
     }
 
+    public AivenServiceUser ensureUserForService(String username) {
+        return getUserAndAcl(username)
+                .map(KafkaUserAndAcl::getUser)
+                .orElseGet(() -> createUserForService(username));
+    }
+
     public AivenServiceUser createUserForService(String username) {
         log.debug("Creating user {} for service {}", username, aivenProperties.getService());
+        try {
 
-        CreateKafkaUserResponse createKafkaUserResponse = Optional.ofNullable(webClient.post()
-                        .uri("/project/{project_name}/service/{service_name}/user", aivenProperties.getProject(), aivenProperties.getService())
-                        .body(BodyInserters.fromValue(new CreateKafkaUserRequest(username)))
-                        .retrieve()
-                        .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> {
-                            log.debug("User already exists");
-                            return Mono.empty();
+            CreateKafkaUserResponse createKafkaUserResponse = Optional.ofNullable(webClient.post()
+                            .uri(
+                                    "/project/{project_name}/service/{service_name}/user",
+                                    aivenProperties.getProject(),
+                                    aivenProperties.getService()
+                            )
+                            .body(BodyInserters.fromValue(new CreateKafkaUserRequest(username)))
+                            .retrieve()
+                            .bodyToMono(CreateKafkaUserResponse.class)
+                            .block())
+                    .orElseThrow();
 
-                        })
-                        .bodyToMono(CreateKafkaUserResponse.class)
-                        .block())
-                .orElseThrow();
+            log.debug(
+                    "Created Aiven Kafka service user with message: {}",
+                    Objects.requireNonNull(createKafkaUserResponse).getMessage()
+            );
 
-        log.debug("Created Aiven Kafka service user with message: {}", Objects.requireNonNull(createKafkaUserResponse).getMessage());
+            return createKafkaUserResponse.getUser();
 
-        return createKafkaUserResponse.getUser();
+        } catch (WebClientResponseException exception) {
+            if (exception.getStatusCode() == HttpStatus.CONFLICT) {
+                log.debug("User {} already exists. Fetching user...", username);
+
+                return getUserAndAcl(username)
+                        .map(KafkaUserAndAcl::getUser)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "User already exists, but could not be fetched: " + username
+                        ));
+            }
+
+            throw exception;
+        }
     }
 
     public void deleteUserForService(String username) {
@@ -96,29 +131,72 @@ public class AivenService {
                 .block();
     }
 
+    public KafkaAclEntry ensureAclEntryForTopic(KafkaAclEntry desiredAclEntry) {
+        return getUserAndAcl(desiredAclEntry.getUsername())
+                .flatMap(userAndAcl -> userAndAcl.getAclEntries()
+                        .stream()
+                        .filter(existingAclEntry ->
+                                Objects.equals(existingAclEntry.getTopic(), desiredAclEntry.getTopic())
+                                        && Objects.equals(existingAclEntry.getPermission(), desiredAclEntry.getPermission())
+                        )
+                        .findFirst()
+                )
+                .orElseGet(() -> createAclEntryForTopic(desiredAclEntry));
+    }
+
     public KafkaAclEntry createAclEntryForTopic(KafkaAclEntry aclEntry) {
         log.debug("Creating ACL entry for topic {} for user {} with permission {}", aclEntry.getTopic(), aclEntry.getUsername(), aclEntry.getPermission());
 
         validatePermission(aclEntry.getPermission());
 
-        return webClient
-                .post()
-                .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
-                .body(BodyInserters.fromValue(
-                        CreateKafkaAclEntryRequest
-                                .builder()
-                                .topic(aclEntry.getTopic())
-                                .permission(aclEntry.getPermission())
-                                .username(aclEntry.getUsername())
-                                .build()
-                ))
-                .retrieve()
-                .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> {
-                    log.debug("Acl already exists");
-                    return Mono.empty();
+        try {
+            CreateKafkaAclEntryResponse response = webClient
+                    .post()
+                    .uri("/project/{project_name}/service/{service_name}/acl", aivenProperties.getProject(), aivenProperties.getService())
+                    .body(BodyInserters.fromValue(
+                            CreateKafkaAclEntryRequest
+                                    .builder()
+                                    .topic(aclEntry.getTopic())
+                                    .permission(aclEntry.getPermission())
+                                    .username(aclEntry.getUsername())
+                                    .build()
+                    ))
+                    .retrieve()
+                    .bodyToMono(CreateKafkaAclEntryResponse.class)
+                    .block();
 
-                }).bodyToMono(CreateKafkaAclEntryResponse.class)
-                .block().getAclByUsernameAndTopic(aclEntry.getUsername(), aclEntry.getTopic());
+            return Optional.ofNullable(Objects.requireNonNull(response)
+                            .getAclByUsernameAndTopic(aclEntry.getUsername(), aclEntry.getTopic()))
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Created ACL, but could not find it in response for user "
+                                    + aclEntry.getUsername()
+                                    + " and topic "
+                                    + aclEntry.getTopic()
+                    ));
+
+        } catch (WebClientResponseException exception) {
+            if (exception.getStatusCode() == HttpStatus.CONFLICT) {
+                log.debug("ACL already exists. Fetching existing ACL for user {} and topic {}", aclEntry.getUsername(), aclEntry.getTopic());
+
+                return getUserAndAcl(aclEntry.getUsername())
+                        .flatMap(userAndAcl -> userAndAcl.getAclEntries()
+                                .stream()
+                                .filter(existingAclEntry ->
+                                        Objects.equals(existingAclEntry.getTopic(), aclEntry.getTopic())
+                                                && Objects.equals(existingAclEntry.getPermission(), aclEntry.getPermission())
+                                )
+                                .findFirst()
+                        )
+                        .orElseThrow(() -> new IllegalStateException(
+                                "ACL already exists, but could not be fetched for user "
+                                        + aclEntry.getUsername()
+                                        + " and topic "
+                                        + aclEntry.getTopic()
+                        ));
+            }
+
+            throw exception;
+        }
     }
 
     public void deleteAclEntryForService(String aclId) {
@@ -137,7 +215,7 @@ public class AivenService {
         Collection<KafkaAclEntry> aclEntriesToAdd = CollectionUtils.removeAll(desired.getAclEntries(), actual.getAclEntries());
 
         aclEntriesToRemove.forEach(aclEntry -> deleteAclEntryForService(aclEntry.getId()));
-        aclEntriesToAdd.forEach(this::createAclEntryForTopic);
+        aclEntriesToAdd.forEach(this::ensureAclEntryForTopic);
         return getUserAndAcl(desired.getUser().getUsername()).orElseThrow();
     }
 
