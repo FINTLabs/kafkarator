@@ -1,6 +1,7 @@
 package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.ContextInitializer;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Deleter;
@@ -12,10 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static no.fintlabs.operator.Constants.*;
+
 @Slf4j
 @Component
 @ControllerConfiguration
-public class KafkaUserAclReconciler extends FlaisReconiler<KafkaUserAndAclCrd, KafkaUserAndAclSpec> {
+public class KafkaUserAclReconciler extends FlaisReconiler<KafkaUserAndAclCrd, KafkaUserAndAclSpec> implements ContextInitializer<KafkaUserAndAclCrd> {
 
     public KafkaUserAclReconciler(
             FlaisWorkflow<KafkaUserAndAclCrd, KafkaUserAndAclSpec> workflow,
@@ -30,14 +33,19 @@ public class KafkaUserAclReconciler extends FlaisReconiler<KafkaUserAndAclCrd, K
             KafkaUserAndAclCrd resource,
             Context<KafkaUserAndAclCrd> context
     ) {
-        String username = NameFactory.userName(resource);
 
-        log.info(
-                "Using Kafka username {} for resource {}",
-                username,
-                resource.getMetadata().getName()
-        );
+        var useNameV2 = context.managedDependentResourceContext().get(SHOULD_USE_NAME_V2, Boolean.class).orElse(false);
+        if (useNameV2) {
+            resource.getMetadata().getAnnotations().put(NAME_VERSION_ANNOTATION, NAME_VERSION_V2);
+        }
 
         return super.reconcile(resource, context);
+    }
+
+    @Override
+    public void initContext(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
+        if (primary.getStatus() == null || primary.getStatus().getObservedGeneration() == null || NameFactory.usesNameVersionV2(primary)) {
+            context.managedDependentResourceContext().put(SHOULD_USE_NAME_V2, true);
+        }
     }
 }
