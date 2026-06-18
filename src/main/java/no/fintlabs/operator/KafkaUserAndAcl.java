@@ -1,13 +1,15 @@
 package no.fintlabs.operator;
 
 import lombok.*;
-import no.fintlabs.aiven.CreateKafkaAclEntryResponse;
-import no.fintlabs.aiven.CreateKafkaUserResponse;
-import no.fintlabs.aiven.KafkaAclEntry;
 import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.GetKafkaAclEntryResponse;
+import no.fintlabs.aiven.GetKafkaUserResponse;
+import no.fintlabs.aiven.KafkaAclEntry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Getter
@@ -20,14 +22,18 @@ public class KafkaUserAndAcl {
     private AivenServiceUser user;
     private List<KafkaAclEntry> aclEntries = new ArrayList<>();
 
-    public static KafkaUserAndAcl fromUserAndAclResponse(CreateKafkaUserResponse user, CreateKafkaAclEntryResponse acl) {
+    public static KafkaUserAndAcl fromUserAndAclResponse(GetKafkaUserResponse user, GetKafkaAclEntryResponse acl) {
+        String username = user.getUser().getUsername();
+
         return KafkaUserAndAcl.builder()
                 .user(user.getUser())
                 .aclEntries(
-                        acl
-                                .getKafkaAclEntry()
+                        Optional.ofNullable(acl.getKafkaAclEntry())
+                                .orElseGet(ArrayList::new)
                                 .stream()
-                                .filter(kafkaAclEntry -> kafkaAclEntry.getUsername().equals(user.getUser().getUsername()))
+                                .filter(kafkaAclEntry ->
+                                        Objects.equals(kafkaAclEntry.getUsername(), username)
+                                )
                                 .collect(Collectors.toList())
                 )
                 .build();
