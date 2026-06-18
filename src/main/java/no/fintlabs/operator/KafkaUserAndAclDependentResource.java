@@ -20,8 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.fintlabs.operator.NameFactory.serviceUserName;
-
 @Slf4j
 @Component
 public class KafkaUserAndAclDependentResource extends FlaisExternalDependentResource<KafkaUserAndAcl, KafkaUserAndAclCrd, KafkaUserAndAclSpec>
@@ -40,18 +38,17 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     @Override
     protected KafkaUserAndAcl desired(KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
 
-        String orgName = primary.getMetadata().getLabels().get("fintlabs.no/org-id");
-        String teamName = primary.getMetadata().getLabels().get("fintlabs.no/team");
-        String appName = primary.getMetadata().getName();
+        var useNameV2 = context.managedDependentResourceContext().get(Constants.SHOULD_USE_NAME_V2, Boolean.class).orElse(false);
+        var userName = NameFactory.userName(primary, useNameV2);
 
         return KafkaUserAndAcl.builder()
-                .user(AivenServiceUser.fromUsername(serviceUserName(orgName, teamName, appName)))
+                .user(AivenServiceUser.fromUsername(userName))
                 .aclEntries(
                         primary
                                 .getSpec()
                                 .getAcls()
                                 .stream()
-                                .map(acl -> acl.toAclEntry(serviceUserName(orgName, teamName, appName)))
+                                .map(acl -> acl.toAclEntry(userName))
                                 .collect(Collectors.toList())
                 )
                 .build();
@@ -80,14 +77,14 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
     public KafkaUserAndAcl create(KafkaUserAndAcl desired, KafkaUserAndAclCrd primary, Context<KafkaUserAndAclCrd> context) {
         String serviceName = aivenProperties.getService();
 
-        AivenServiceUser aivenServiceUser = aivenService.createUserForService(desired.getUser().getUsername());
-        log.debug("Created user {} for service {}", desired.getUser().getUsername(), serviceName);
+        AivenServiceUser aivenServiceUser = aivenService.ensureUserForService(desired.getUser().getUsername());
+        log.debug("Ensured user {} for service {}", desired.getUser().getUsername(), serviceName);
 
         List<KafkaAclEntry> kafkaAclEntries = desired.getAclEntries()
                 .stream()
                 .map(kafkaAclEntry -> {
-                    KafkaAclEntry aclEntryForTopic = aivenService.createAclEntryForTopic(kafkaAclEntry);
-                    log.debug("Created ACL for user {} on topic {}", kafkaAclEntry.getUsername(), kafkaAclEntry.getTopic());
+                    KafkaAclEntry aclEntryForTopic = aivenService.ensureAclEntryForTopic(kafkaAclEntry);
+                    log.debug("Ensured ACL for user {} on topic {}", kafkaAclEntry.getUsername(), kafkaAclEntry.getTopic());
                     return aclEntryForTopic;
 
                 })
@@ -103,13 +100,10 @@ public class KafkaUserAndAclDependentResource extends FlaisExternalDependentReso
 
     @Override
     public Set<KafkaUserAndAcl> fetchResources(KafkaUserAndAclCrd primary) {
-
-        String orgName = primary.getMetadata().getLabels().get("fintlabs.no/org-id");
-        String teamName = primary.getMetadata().getLabels().get("fintlabs.no/team");
-        String appName = primary.getMetadata().getName();
+        String username = NameFactory.userName(primary, NameFactory.usesNameVersionV2(primary));
 
         return aivenService
-                .getUserAndAcl(serviceUserName(orgName, teamName, appName))
+                .getUserAndAcl(username)
                 .map(Collections::singleton)
                 .orElse(Collections.emptySet());
     }
