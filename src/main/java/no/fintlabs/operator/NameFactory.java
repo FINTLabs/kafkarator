@@ -5,23 +5,15 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.CRC32;
 
+import static no.fintlabs.operator.Constants.*;
+
 public class NameFactory {
-    private static final int ORG_NAME_LENGTH = 10;
-    private static final int TEAM_NAME_LENGTH = 15;
-    private static final int APP_NAME_LENGTH = 25;
-
-    private static final String ORG_ID_LABEL = "fintlabs.no/org-id";
-    private static final String TEAM_LABEL = "fintlabs.no/team";
-
-    private static final String NAME_VERSION_ANNOTATION = "kafka.fintlabs.no/name-version";
-    private static final String NAME_VERSION_V2 = "v2";
-
-    public static String userName(HasMetadata metadata) {
-        if(usesNameVersionV2(metadata)){
+    public static String userName(HasMetadata metadata, boolean useV2) {
+        if (useV2) {
             return serviceUserName(
-              metadata.getMetadata().getLabels().get(ORG_ID_LABEL),
-              metadata.getMetadata().getLabels().get(TEAM_LABEL),
-              metadata.getMetadata().getName()
+                    metadata.getMetadata().getLabels().get(ORG_ID_LABEL),
+                    metadata.getMetadata().getLabels().get(TEAM_LABEL),
+                    metadata.getMetadata().getName()
             );
         }
 
@@ -51,7 +43,7 @@ public class NameFactory {
         );
     }
 
-    private static boolean usesNameVersionV2(HasMetadata metadata) {
+    public static boolean usesNameVersionV2(HasMetadata metadata) {
         var annotations = metadata.getMetadata().getAnnotations();
 
         return annotations != null
