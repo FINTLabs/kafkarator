@@ -21,14 +21,13 @@ jobs:
     secrets: inherit
 
   deploy-alpha:
-    if: github.event.name == 'workflow_dispatch' && inputs.environment == 'alpha'
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'alpha'
     uses: ./.github/workflows/.cluster-deploy.yaml
     needs: build-publish
     secrets: inherit
     with:
       environment: alpha
       image-tags: ${{ needs.build-publish.outputs.image-tags }}
-
 
   deploy-beta:
     if: github.event_name == 'workflow_dispatch' && inputs.environment == 'beta'
