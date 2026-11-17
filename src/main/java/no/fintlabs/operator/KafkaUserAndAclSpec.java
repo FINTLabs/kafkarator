@@ -1,6 +1,11 @@
 package no.fintlabs.operator;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import no.fintlabs.FlaisSpec;
 import no.fintlabs.aiven.KafkaAclEntry;
 
@@ -13,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KafkaUserAndAclSpec implements FlaisSpec {
+    @Builder.Default
     private List<Acl> acls = new ArrayList<>();
 
     @Data

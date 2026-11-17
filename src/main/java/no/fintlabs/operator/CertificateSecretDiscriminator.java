@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static no.fintlabs.operator.CertificateSecretDependentResource.NAME_SUFFIX;
-
 @Component
 public class CertificateSecretDiscriminator implements ResourceDiscriminator<Secret, KafkaUserAndAclCrd> {
     @Override

@@ -1,10 +1,15 @@
 package no.fintlabs.operator;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import no.fintlabs.aiven.AivenServiceUser;
 import no.fintlabs.aiven.CreateKafkaAclEntryResponse;
 import no.fintlabs.aiven.CreateKafkaUserResponse;
 import no.fintlabs.aiven.KafkaAclEntry;
-import no.fintlabs.aiven.AivenServiceUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 public class KafkaUserAndAcl {
     private AivenServiceUser user;
+    @Builder.Default
     private List<KafkaAclEntry> aclEntries = new ArrayList<>();
 
     public static KafkaUserAndAcl fromUserAndAclResponse(CreateKafkaUserResponse user, CreateKafkaAclEntryResponse acl) {

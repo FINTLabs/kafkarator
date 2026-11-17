@@ -1,7 +1,7 @@
 package no.fintlabs.operator
 
-import no.fintlabs.aiven.KafkaAclEntry
 import no.fintlabs.aiven.AivenServiceUser
+import no.fintlabs.aiven.KafkaAclEntry
 import spock.lang.Specification
 
 class AivenServiceUserAndAclModelSpec extends Specification {
