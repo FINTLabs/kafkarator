@@ -13,5 +13,4 @@ WORKDIR /data
 COPY --from=builder --chown=0:0 --chmod=0444 \
     /home/gradle/build/libs/*.jar /data/app.jar
 
-USER 65532:65532
-CMD ["/data/app.jar"]
+CMD ["/data/app.jar"] 
