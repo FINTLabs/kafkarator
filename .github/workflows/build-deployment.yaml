@@ -48,7 +48,7 @@ jobs:
       image-tags: ${{ needs.build-publish.outputs.image-tags }}
 
   create-release:
-    if: github.ref == 'refs/heads/prod'
+    if: github.ref == 'refs/heads/main' && needs.deploy-api.result == 'success'
     uses: ./.github/workflows/.create-release.yaml
     needs: [build-publish, deploy-api]
     secrets: inherit
