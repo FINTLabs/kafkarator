@@ -66,13 +66,36 @@ class AivenServiceTest {
 
     @Test
     void getUserAndAcl_ShouldReturnUserAndAcl_WhenUserExists() {
-        String userResponseJson = "{ \"username\": \"test_user\", \"...\": \"...\" }";
+        String userResponseJson = """
+        {
+            "user": {
+                "username": "test_user"
+            }
+        }
+        """;
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
                 .setBody(userResponseJson)
                 .addHeader("Content-Type", "application/json"));
 
-        String aclResponseJson = "{ \"entries\": [ { \"permission\": \"read\", \"username\": \"test_user\" } ] }";
+        String aclResponseJson = """
+                {
+                    "acl": [
+                        {
+                          "id": "acl-1",
+                          "permission": "read",
+                          "username": "test_user",
+                          "topic": "test-topic"
+                        },
+                        {
+                          "id": "acl-2",
+                          "permission": "write",
+                          "username": "other_user",
+                          "topic": "other-topic"
+                        }
+                    ]
+                }
+                """;
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
                 .setBody(aclResponseJson)
@@ -81,5 +104,74 @@ class AivenServiceTest {
         Optional<KafkaUserAndAcl> result = service.getUserAndAcl("test_user");
 
         assertTrue(result.isPresent(), "Expected to find KafkaUserAndAcl");
+        assertEquals("test_user", result.get().getUser().getUsername());
+        assertEquals(1, result.get().getAclEntries().size());
+        assertEquals("test_user", result.get().getAclEntries().get(0).getUsername());
+        assertEquals("test-topic", result.get().getAclEntries().get(0).getTopic());
+        assertEquals("read", result.get().getAclEntries().get(0).getPermission());
+    }
+
+    @Test
+    void ensureUserForService_ShouldReturnExistingUser_WhenUserExists() throws InterruptedException {
+        String userResponseJson = """
+            {
+              "user": {
+                "username": "test_user"
+              }
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setBody(userResponseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        String aclResponseJson = """
+            {
+              "acl": []
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setBody(aclResponseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        AivenServiceUser result = service.ensureUserForService("test_user");
+
+        assertEquals("test_user", result.getUsername());
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        assertEquals("GET", mockWebServer.takeRequest().getMethod());
+        assertEquals("GET", mockWebServer.takeRequest().getMethod());
+    }
+
+    @Test
+    void ensureUserForService_ShouldCreateUser_WhenUserDoesNotExist() throws InterruptedException {
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.NOT_FOUND.value())
+                .setBody("User not found"));
+
+        String createUserResponseJson = """
+            {
+              "message": "created",
+              "user": {
+                "username": "test_user"
+              }
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setBody(createUserResponseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        AivenServiceUser result = service.ensureUserForService("test_user");
+
+        assertEquals("test_user", result.getUsername());
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        assertEquals("GET", mockWebServer.takeRequest().getMethod());
+        assertEquals("POST", mockWebServer.takeRequest().getMethod());
     }
 }
