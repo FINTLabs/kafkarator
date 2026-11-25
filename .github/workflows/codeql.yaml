@@ -36,12 +36,12 @@ jobs:
           java-version: "17"
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.39.3
+        uses: github/codeql-action/init@v4.39.4
         with:
           languages: ${{ matrix.language }}
           build-mode: none
 
       - name: Analyze code
-        uses: github/codeql-action/analyze@v4.39.3
+        uses: github/codeql-action/analyze@v4.39.4
         with:
           category: /language:${{ matrix.language }}
