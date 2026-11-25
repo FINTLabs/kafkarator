@@ -5,7 +5,7 @@ WORKDIR /home/gradle
 COPY --chown=gradle:gradle . .
 RUN gradle --no-daemon build
 
-FROM gcr.io/distroless/java17:nonroot@sha256:b0719fc18858c53530b7301c25fa410075f0fdc442a78d3ee1786d1984075404
+FROM gcr.io/distroless/java17:nonroot@sha256:cbbf140705ea2bd2157840d713ba54fe3435e84223aa450c6a8c2fec69fd8409
 
 ENV JAVA_TOOL_OPTIONS="-XX:+ExitOnOutOfMemoryError"
 
