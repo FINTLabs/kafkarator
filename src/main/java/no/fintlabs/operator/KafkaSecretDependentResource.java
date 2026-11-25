@@ -66,6 +66,7 @@ public class KafkaSecretDependentResource extends FlaisKubernetesDependentResour
                 .withType("Opaque")
                 .addToData("fint.kafka.enable-ssl", encode("true"))
                 .addToData("spring.kafka.bootstrap-servers", encode(aivenProperties.getKafkaBootstrapServers()))
+                .addToData("spring.kafka.security.protocol", encode("SSL"))
                 .addToData("spring.kafka.ssl.key-password", encode(keyStorePassword))
                 .addToData("spring.kafka.ssl.key-store-location", encode("file:/credentials/client.keystore.p12"))
                 .addToData("spring.kafka.ssl.key-store-password", encode(keyStorePassword))
